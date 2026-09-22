@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 860" width="420" height="860">
+  <defs>
+    <linearGradient id="sky" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#241B4E"/>
+      <stop offset="60%" stop-color="#3B2170"/>
+      <stop offset="100%" stop-color="#6C3CE0"/>
+    </linearGradient>
+    <linearGradient id="orbGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2FE6B4"/>
+      <stop offset="100%" stop-color="#1FB894"/>
+    </linearGradient>
+  </defs>
+
+  <!-- phone body -->
+  <rect x="10" y="10" width="400" height="840" rx="56" fill="#1A1440"/>
+  <rect x="22" y="22" width="376" height="816" rx="46" fill="url(#sky)"/>
+
+  <!-- stars (twinkles) -->
+  <g fill="#FFFFFF" opacity="0.9">
+    <circle cx="70" cy="120" r="2.4"/>
+    <circle cx="330" cy="90" r="2"/>
+    <circle cx="300" cy="220" r="2.6"/>
+    <circle cx="90" cy="300" r="2"/>
+    <circle cx="350" cy="420" r="2.4"/>
+    <circle cx="60" cy="520" r="2"/>
+    <circle cx="250" cy="600" r="2.6"/>
+    <circle cx="330" cy="700" r="2"/>
+  </g>
+
+  <!-- collectible stars -->
+  <g fill="#FFB840">
+    <path d="M 120 260 L 126 274 L 141 277 L 130 288 L 133 303 L 120 296 L 107 303 L 110 288 L 99 277 L 114 274 Z"/>
+    <path d="M 300 470 L 306 484 L 321 487 L 310 498 L 313 513 L 300 506 L 287 513 L 290 498 L 279 487 L 294 484 Z"/>
+  </g>
+
+  <!-- barrier -->
+  <rect x="255" y="330" width="110" height="26" rx="13" fill="#FF5F8F"/>
+  <rect x="255" y="330" width="110" height="26" rx="13" fill="none" stroke="#1A1440" stroke-width="4"/>
+
+  <!-- anchor point -->
+  <circle cx="150" cy="200" r="12" fill="#FFFFFF"/>
+  <circle cx="150" cy="200" r="12" fill="none" stroke="#1A1440" stroke-width="4"/>
+
+  <!-- tether line -->
+  <line x1="150" y1="200" x2="255" y2="430" stroke="#FFFFFF" stroke-width="4" stroke-dasharray="2 10" stroke-linecap="round"/>
+
+  <!-- orb (player) -->
+  <circle cx="255" cy="430" r="26" fill="url(#orbGrad)" stroke="#1A1440" stroke-width="5"/>
+  <circle cx="247" cy="422" r="6" fill="#FFFFFF" opacity="0.75"/>
+
+  <!-- second anchor lower -->
+  <circle cx="120" cy="560" r="12" fill="#FFFFFF"/>
+  <circle cx="120" cy="560" r="12" fill="none" stroke="#1A1440" stroke-width="4"/>
+
+  <!-- HUD score -->
+  <g font-family="Poppins, sans-serif" fill="#FFFFFF">
+    <text x="46" y="80" font-size="30" font-weight="700">1,240</text>
+  </g>
+  <g stroke="#FFFFFF" stroke-width="4" fill="none" stroke-linecap="round">
+    <path d="M 46 100 h 60"/>
+  </g>
+
+  <!-- home indicator -->
+  <rect x="170" y="820" width="80" height="6" rx="3" fill="#FFFFFF" opacity="0.6"/>
+</svg>
