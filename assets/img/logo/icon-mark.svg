@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6C3CE0"/>
+      <stop offset="52%" stop-color="#FF5F8F"/>
+      <stop offset="100%" stop-color="#FFB840"/>
+    </linearGradient>
+    <radialGradient id="sheen" cx="30%" cy="20%" r="75%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.22"/>
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- badge background: squircle -->
+  <rect x="8" y="8" width="496" height="496" rx="132" fill="url(#bg)"/>
+  <rect x="8" y="8" width="496" height="496" rx="132" fill="url(#sheen)"/>
+
+  <!-- sparkle stars -->
+  <g fill="#FFFFFF">
+    <path d="M 96 108 L 104 128 L 124 136 L 104 144 L 96 164 L 88 144 L 68 136 L 88 128 Z"/>
+    <path d="M 420 96 L 426 110 L 440 116 L 426 122 L 420 136 L 414 122 L 400 116 L 414 110 Z"/>
+    <path d="M 432 300 L 437 311 L 448 316 L 437 321 L 432 332 L 427 321 L 416 316 L 427 311 Z"/>
+  </g>
+
+  <!-- ===== mascot: TP-roll buddy ===== -->
+  <g stroke="#1A1440" stroke-width="10" stroke-linejoin="round" stroke-linecap="round">
+
+    <!-- left arm (relaxed, hand on hip) -->
+    <path d="M 168 268 C 128 272 118 306 132 336" fill="none"/>
+    <circle cx="132" cy="340" r="17" fill="#FFFFFF"/>
+
+    <!-- right arm raised holding joystick -->
+    <path d="M 344 250 C 372 226 386 206 392 182" fill="none"/>
+    <circle cx="394" cy="178" r="17" fill="#FFFFFF"/>
+
+    <!-- joystick -->
+    <rect x="374" y="150" width="40" height="24" rx="8" fill="#1A1440" stroke="none"/>
+    <line x1="394" y1="150" x2="394" y2="118" stroke="#1A1440"/>
+    <circle cx="394" cy="108" r="14" fill="#2FE6B4"/>
+
+    <!-- feet -->
+    <ellipse cx="222" cy="392" rx="26" ry="16" fill="#1A1440" stroke="none"/>
+    <ellipse cx="292" cy="392" rx="26" ry="16" fill="#1A1440" stroke="none"/>
+
+    <!-- body (roll, side view) -->
+    <rect x="163" y="188" width="188" height="192" rx="46" fill="#FFFFFF"/>
+
+    <!-- perforation line -->
+    <line x1="180" y1="304" x2="334" y2="304" stroke="#1A1440" stroke-width="5" stroke-dasharray="1 15"/>
+
+    <!-- head: roll end -->
+    <circle cx="257" cy="188" r="96" fill="#FFFFFF"/>
+    <circle cx="257" cy="188" r="33" fill="#F2B84B"/>
+
+    <!-- blush -->
+    <g stroke="none" fill="#FF5F8F" opacity="0.55">
+      <ellipse cx="197" cy="206" rx="13" ry="9"/>
+      <ellipse cx="317" cy="206" rx="13" ry="9"/>
+    </g>
+
+    <!-- eyes -->
+    <g stroke="none" fill="#1A1440">
+      <circle cx="216" cy="176" r="13"/>
+      <circle cx="298" cy="176" r="13"/>
+    </g>
+    <g stroke="none" fill="#FFFFFF">
+      <circle cx="220" cy="171" r="4"/>
+      <circle cx="302" cy="171" r="4"/>
+    </g>
+
+    <!-- smile -->
+    <path d="M 222 214 Q 257 240 292 214" fill="none"/>
+  </g>
+</svg>
