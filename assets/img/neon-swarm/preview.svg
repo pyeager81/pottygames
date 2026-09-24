@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 860" width="420" height="860">
+  <defs>
+    <linearGradient id="sky2" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#07071A"/>
+      <stop offset="60%" stop-color="#0F0B2A"/>
+      <stop offset="100%" stop-color="#1E0B3D"/>
+    </linearGradient>
+    <filter id="g1" x="-100%" y="-100%" width="300%" height="300%">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="g2" x="-150%" y="-150%" width="400%" height="400%">
+      <feGaussianBlur stdDeviation="4" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- phone body -->
+  <rect x="10" y="10" width="400" height="840" rx="56" fill="#0A0A18"/>
+  <rect x="22" y="22" width="376" height="816" rx="46" fill="url(#sky2)"/>
+
+  <!-- starfield -->
+  <g fill="#FFFFFF" opacity="0.85">
+    <circle cx="60" cy="120" r="1.8"/>
+    <circle cx="340" cy="90" r="1.5"/>
+    <circle cx="300" cy="220" r="2"/>
+    <circle cx="90" cy="300" r="1.5"/>
+    <circle cx="350" cy="420" r="1.8"/>
+    <circle cx="70" cy="520" r="1.5"/>
+    <circle cx="250" cy="600" r="2"/>
+    <circle cx="330" cy="700" r="1.5"/>
+    <circle cx="180" cy="150" r="1.4"/>
+    <circle cx="120" cy="470" r="1.6"/>
+  </g>
+
+  <!-- combo / HUD -->
+  <g font-family="Poppins, sans-serif" fill="#FFFFFF">
+    <text x="46" y="80" font-size="30" font-weight="700">2,480</text>
+  </g>
+  <g font-family="Poppins, sans-serif">
+    <text x="46" y="112" font-size="20" font-weight="700" fill="#FF2FD6">x4 COMBO</text>
+  </g>
+  <g font-family="Poppins, sans-serif" fill="#8CF7FF" opacity="0.9">
+    <text x="374" y="80" font-size="18" font-weight="600" text-anchor="end">WAVE 5</text>
+  </g>
+
+  <!-- enemies -->
+  <g filter="url(#g2)">
+    <path d="M 300 220 L 320 242 L 300 264 L 280 242 Z" fill="#FF2FD6"/>
+  </g>
+  <g filter="url(#g2)">
+    <circle cx="120" cy="260" r="17" fill="#2FE6F5"/>
+  </g>
+  <g filter="url(#g2)">
+    <path d="M 250 330 L 268 348 L 250 366 L 232 348 Z" fill="#FF2FD6"/>
+  </g>
+
+  <!-- bullets from ship -->
+  <g stroke="#8CF7FF" stroke-width="5" stroke-linecap="round" filter="url(#g2)" opacity="0.9">
+    <line x1="210" y1="640" x2="196" y2="420"/>
+    <line x1="210" y1="640" x2="222" y2="400"/>
+    <line x1="210" y1="640" x2="245" y2="450"/>
+  </g>
+
+  <!-- XP gems -->
+  <g filter="url(#g2)">
+    <path d="M 296 268 L 306 278 L 296 288 L 286 278 Z" fill="#B45CFF"/>
+    <path d="M 150 300 L 158 308 L 150 316 L 142 308 Z" fill="#B45CFF"/>
+  </g>
+
+  <!-- orbit drone -->
+  <g filter="url(#g2)">
+    <circle cx="255" cy="600" r="8" fill="#FFD23D"/>
+  </g>
+
+  <!-- player ship -->
+  <g filter="url(#g1)">
+    <path d="M 210 590 L 250 668 L 210 648 L 170 668 Z" fill="#00F0FF"/>
+    <path d="M 210 590 L 250 668 L 210 648 L 170 668 Z" fill="none" stroke="#EAFFFF" stroke-width="3"/>
+  </g>
+  <g filter="url(#g1)">
+    <path d="M 198 662 L 210 700 L 222 662 Z" fill="#FFD23D"/>
+  </g>
+
+  <!-- home indicator -->
+  <rect x="170" y="820" width="80" height="6" rx="3" fill="#FFFFFF" opacity="0.5"/>
+</svg>
