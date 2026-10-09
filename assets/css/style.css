@@ -542,3 +542,10 @@ section.alt { background: var(--cream-2); }
   font-size: 0.9rem;
 }
 .footer-socials a:hover { background: var(--gradient); color: white; text-decoration: none; }
+
+/* store CTAs on home game cards */
+.game-mini-card .btn { margin-top: auto; align-self: flex-start; margin-bottom: 10px; }
+.game-mini-card .btn + .mini-more { margin-top: 0; }
+a.store-badge { text-decoration: none; }
+a.store-badge:hover { transform: translateY(-2px); }
+.game-mini-card .status-pill-soon, .game-mini-card .status-pill-neon { align-self: flex-start; }
