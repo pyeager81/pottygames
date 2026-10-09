@@ -51,16 +51,13 @@
 
 <section class="legal-hero">
   <div class="wrap">
-    <span class="updated-badge">Last updated: September 24, 2026</span>
+    <span class="updated-badge">Last updated: October 9, 2026</span>
     <h1>Data Safety</h1>
     <p>A plain-language breakdown of what data our games collect and share, matching the spirit of the Google Play Data Safety and Apple App Privacy labels.</p>
   </div>
 </section>
 
 <div class="legal-body">
-  <div class="callout">
-    <strong>Before you publish:</strong> use this page as a plain-language companion to — not a replacement for — the official <strong>Data Safety</strong> form in Google Play Console and the <strong>App Privacy</strong> details in App Store Connect. Fill those out directly to match your current build, then keep this page in sync whenever they change.
-  </div>
 
   <h2>Snap &amp; Swing</h2>
   <p>Snap &amp; Swing does not require an account and does not collect personal profile information. It uses Google AdMob to show ads, which involves the data below.</p>
@@ -91,7 +88,7 @@
   <p>The advertising-related data above supports the free, ad-based version of the game. We don't currently offer a way to disable ad data collection within the app itself, but you can limit ad tracking at the device level as described above.</p>
 
   <h2 style="margin-top:3em;">TP Tower</h2>
-  <p>TP Tower has no accounts — your best score, coins, and unlocked roll styles are stored only on your device, and uninstalling the app deletes that progress. Like Snap &amp; Swing, ads are shown only through Google AdMob, and only when you choose to watch one for a reward (no forced ads between runs).</p>
+  <p>TP Tower has no accounts — your best score, coins, and unlocked roll styles are stored only on your device, and uninstalling the app deletes that progress. Like Snap &amp; Swing, ads are shown through Google AdMob: optional rewarded ads, plus occasional ads between runs. A one-time in-app purchase removes the between-run ads; that payment is handled entirely by Google Play, and we never see your payment details.</p>
 
   <table>
     <thead>
@@ -111,7 +108,23 @@
   <p>Encrypted in transit: yes. Deletion: nothing is stored on a server — uninstalling the app removes everything saved locally. Since TP Tower can be relevant to younger players, note that if its Play Store audience settings ever include under-13 age groups, AdMob must be configured for Google's Families policy (child-directed ad treatment); as currently planned, the target audience is 13+.</p>
 
   <h2 style="margin-top:3em;">Neon Swarm</h2>
-  <p>Neon Swarm is still in active development and has no public build yet, so nothing is currently being collected from players. It's being built on the same pattern as our other titles: no accounts, local-only save data, and Google AdMob for optional rewarded ads (never banner ads, never forced interstitials early in a session). Once it reaches testing, we expect its data practices to match TP Tower's table above — this page will be updated with confirmed specifics before it's publicly released.</p>
+  <p>Neon Swarm works the same way as TP Tower. There are no accounts: your progress and permanent upgrades are stored only on your device, and uninstalling the app deletes them. Ads are shown through Google AdMob: optional rewarded ads, plus occasional ads between runs, and never banner ads. A one-time in-app purchase removes the between-run ads; that payment is handled entirely by Google Play.</p>
+  <table>
+    <thead>
+      <tr><th>Data type</th><th>Collected</th><th>Shared</th><th>Purpose</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Advertising ID / device identifiers</td><td>Yes</td><td>Yes (with AdMob)</td><td>Advertising, analytics, fraud prevention</td></tr>
+      <tr><td>App interactions &amp; crash diagnostics</td><td>Yes</td><td>No</td><td>Stability, bug fixing</td></tr>
+      <tr><td>Approximate location (IP-based)</td><td>Yes, via ad SDK</td><td>Yes (with AdMob)</td><td>General ad relevance</td></tr>
+      <tr><td>Precise location (GPS)</td><td>No</td><td>No</td><td>—</td></tr>
+      <tr><td>Name, email, or contact info</td><td>No</td><td>No</td><td>—</td></tr>
+      <tr><td>Photos, files, or media</td><td>No</td><td>No</td><td>—</td></tr>
+      <tr><td>Financial or payment info</td><td>No</td><td>No</td><td>—</td></tr>
+      <tr><td>Health or fitness data</td><td>No</td><td>No</td><td>—</td></tr>
+    </tbody>
+  </table>
+  <p>Encrypted in transit: yes. Deletion: nothing is stored on a server, so uninstalling the app removes everything saved locally.</p>
 
   <h3 style="margin-top:2.2em;">Is data encrypted in transit?</h3>
   <p>Yes, across all of our titles — data sent to our third-party services (like Google AdMob) travels over standard encrypted (HTTPS) connections.</p>
