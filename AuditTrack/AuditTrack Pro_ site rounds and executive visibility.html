@@ -1,0 +1,1281 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#181B30">
+<title>AuditTrack Pro: site rounds and executive visibility</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F3F4F0; --surface:#FFFFFF; --sunk:#E9EAE4; --ink:#181B30; --muted:#585C70; --line:#D9DAD2;
+  --accent:#3B44C4; --accent-ink:#FFFFFF; --accent-soft:#E5E6FA;
+  --pass:#2B7A4B; --pass-soft:#DFF0E5; --warn:#9A620E; --warn-soft:#F7EAD2; --fail:#B3302A; --fail-soft:#F7DFDC;
+  color-scheme: light; box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#11131D; --surface:#1A1D2B; --sunk:#232738; --ink:#ECEDF4; --muted:#A4A7BA; --line:#2E3247;
+    --accent:#9097FF; --accent-ink:#11131D; --accent-soft:#272B50;
+    --pass:#6FCB94; --pass-soft:#1B3427; --warn:#E8B45C; --warn-soft:#3A2D16; --fail:#F28C82; --fail-soft:#3D1F1D; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#11131D; --surface:#1A1D2B; --sunk:#232738; --ink:#ECEDF4; --muted:#A4A7BA; --line:#2E3247;
+  --accent:#9097FF; --accent-ink:#11131D; --accent-soft:#272B50;
+  --pass:#6FCB94; --pass-soft:#1B3427; --warn:#E8B45C; --warn-soft:#3A2D16; --fail:#F28C82; --fail-soft:#3D1F1D; color-scheme: dark;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px);-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:16px;line-height:1.5}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--paper)}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px;border-radius:6px}
+h1,h2,h3{line-height:1.2;margin:0} h1{font-size:1.75rem} h2{font-size:1.25rem} h3{font-size:1rem}
+p{margin:0}
+.muted{color:var(--muted)} .num{font-variant-numeric:tabular-nums}
+.shell{display:flex;min-height:100%}
+nav.nav{position:fixed;left:0;right:0;bottom:0;z-index:20;display:flex;background:var(--surface);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
+nav.nav .brand{display:none}
+nav.nav button{position:relative;flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;background:none;border:0;padding:8px 4px 10px;min-height:56px;font-size:.78rem;color:var(--muted)}
+nav.nav button svg{width:22px;height:22px}
+nav.nav button[aria-current="page"]{color:var(--accent);font-weight:700}
+nav.nav .count{position:absolute;top:4px;left:calc(50% + 6px);background:var(--fail);color:#fff;font-size:.7rem;font-weight:700;border-radius:999px;padding:0 6px;line-height:1.5}
+.main{flex:1;min-width:0;padding-bottom:84px}
+header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:15;background:var(--paper);display:grid;grid-template-columns:1fr auto;grid-template-areas:"who role" "ctx ctx";gap:10px 12px;align-items:center;padding:12px 18px;border-bottom:1px solid var(--line)}
+header.top .who{grid-area:who;min-width:0}
+header.top .who strong{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+header.top .who span{font-size:.85rem;color:var(--muted)}
+header.top .ctx{grid-area:ctx}
+header.top .ctx:empty{display:none}
+header.top .ctx select{min-height:44px}
+.role{grid-area:role;display:flex;background:var(--sunk);border-radius:999px;padding:3px}
+.role button{border:0;background:none;border-radius:999px;padding:6px 12px;font-size:.85rem;color:var(--muted);min-height:36px}
+.role button[aria-pressed="true"]{background:var(--surface);color:var(--ink);font-weight:700;box-shadow:0 1px 2px rgba(0,0,0,.12)}
+#view{max-width:1120px;margin:0 auto;padding:20px 18px 32px}
+@media (max-width:520px){header.top .who span{display:none}}
+@media (min-width:900px){
+  nav.nav{position:sticky;top:0;bottom:auto;left:auto;right:auto;flex-direction:column;justify-content:flex-start;width:230px;height:100vh;border-top:0;border-right:1px solid var(--line);padding:20px 12px;gap:4px}
+  nav.nav .brand{display:block;padding:4px 12px 20px}
+  nav.nav button{flex:0;flex-direction:row;justify-content:flex-start;gap:12px;padding:10px 12px;border-radius:8px;font-size:.95rem;min-height:44px}
+  nav.nav button[aria-current="page"]{background:var(--accent-soft)}
+  nav.nav .count{position:static;margin-left:auto}
+  .main{padding-bottom:0}
+  header.top{grid-template-columns:1fr auto auto;grid-template-areas:"who ctx role";padding:14px 28px}
+  header.top .ctx select{width:auto;min-width:220px}
+  #view{padding:28px 28px 48px}
+}
+.brand-mark{display:flex;align-items:center;gap:10px;font-weight:700;font-size:1.1rem}
+.brand-mark svg{width:28px;height:28px;flex-shrink:0}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:0 18px;border-radius:10px;border:1px solid var(--line);background:var(--surface);font-weight:700}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.ghost{background:none;border-color:transparent;color:var(--accent)}
+.btn.danger{color:var(--fail)}
+.btn.small{min-height:40px;padding:0 14px;font-size:.9rem}
+.seg{display:inline-flex;background:var(--sunk);border-radius:10px;padding:3px;margin:20px 0 12px;max-width:100%;overflow-x:auto}
+.seg button{border:0;background:none;padding:8px 14px;border-radius:8px;color:var(--muted);min-height:40px;white-space:nowrap}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);font-weight:700;box-shadow:0 1px 2px rgba(0,0,0,.12)}
+.field{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+.field label{font-weight:700;font-size:.9rem}
+.hint{font-size:.85rem;color:var(--muted)}
+input[type=text],input[type=date],input[type=number],select,textarea{width:100%;min-height:48px;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--surface)}
+textarea{min-height:88px;resize:vertical}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.badge{display:inline-block;font-size:.78rem;font-weight:700;padding:2px 8px;border-radius:999px;background:var(--sunk);color:var(--muted);white-space:nowrap}
+.badge.pass,.badge.low,.badge.green{background:var(--pass-soft);color:var(--pass)}
+.badge.partial,.badge.med,.badge.amber{background:var(--warn-soft);color:var(--warn)}
+.badge.fail,.badge.high,.badge.overdue,.badge.red{background:var(--fail-soft);color:var(--fail)}
+.badge.crit{background:var(--fail);color:#fff}
+.empty{padding:28px 20px;text-align:center;border:1px dashed var(--line);border-radius:12px;color:var(--muted)}
+.section{margin-top:34px}
+.section > h2{margin-bottom:12px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px}
+.alert{display:flex;gap:12px;align-items:flex-start;background:var(--fail-soft);color:var(--fail);border-radius:12px;padding:12px 14px;margin-bottom:18px}
+.alert svg{width:22px;height:22px;flex-shrink:0;margin-top:1px}
+.alert p{color:var(--ink)}
+/* today cards */
+.today{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:26px}
+.tcard{display:flex;flex-direction:column;align-items:flex-start;gap:6px;text-align:left;padding:14px;border-radius:14px;border:2px solid var(--line);background:var(--surface);min-height:96px}
+.tcard b{font-size:1.05rem}
+.tcard.done{border-color:var(--pass);background:var(--pass-soft)}
+.tcard.flag{border-color:var(--warn);background:var(--warn-soft)}
+/* ring */
+.round{display:flex;align-items:center;gap:22px;flex-wrap:wrap}
+.ring{position:relative;width:124px;height:124px;flex-shrink:0}
+.ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.ring .track{stroke:var(--sunk)} .ring .fill{stroke:var(--accent);transition:stroke-dashoffset .6s ease}
+.ring .center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.ring .center b{font-size:1.8rem;line-height:1} .ring .center span{font-size:.8rem;color:var(--muted)}
+.round .copy h1{margin-bottom:6px} .round .copy p{max-width:46ch}
+@media (prefers-reduced-motion: reduce){.ring .fill{transition:none}}
+/* list */
+.list{display:flex;flex-direction:column;gap:8px}
+.group-label{font-size:.9rem;font-weight:700;color:var(--muted);margin:18px 0 6px}
+.item{display:flex;align-items:center;gap:14px;width:100%;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px;min-height:64px}
+.item:hover{border-color:var(--accent)}
+.item .mark{width:26px;height:26px;flex-shrink:0;border-radius:50%;border:2px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:.6rem;font-weight:700}
+.item .mark svg{width:16px;height:16px}
+.item .mark.pass{background:var(--pass);border-color:var(--pass);color:#fff}
+.item .mark.partial{background:var(--warn);border-color:var(--warn);color:#fff}
+.item .mark.fail{background:var(--fail);border-color:var(--fail);color:#fff}
+.item .mark.na{background:var(--sunk);color:var(--muted)}
+.item .body{flex:1;min-width:0}
+.item .title{font-weight:700}
+.item .meta{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:.85rem;color:var(--muted);margin-top:2px}
+.item .side{flex-shrink:0;display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+@media (max-width:640px){.item.esc{flex-wrap:wrap}.item.esc .side{width:100%;justify-content:flex-start;padding-left:40px}}
+/* sheet */
+dialog{border:0;padding:0;background:var(--surface);color:var(--ink);width:100%;max-width:660px;max-height:94vh;margin:auto auto 0;border-radius:18px 18px 0 0;box-shadow:0 -8px 40px rgba(0,0,0,.25)}
+dialog::backdrop{background:rgba(10,12,24,.5)}
+@media (min-width:700px){dialog{margin:auto;border-radius:18px;max-height:88vh}}
+.sheet{display:flex;flex-direction:column;max-height:inherit}
+.sheet-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:18px 20px 12px;border-bottom:1px solid var(--line)}
+.sheet-body{overflow:auto;padding:16px 20px 20px}
+.sheet-foot{display:flex;gap:10px;justify-content:flex-end;padding:12px 20px calc(14px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line);flex-wrap:wrap}
+.icon-btn{width:44px;height:44px;border-radius:50%;border:0;background:var(--sunk);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0}
+.chip{font-size:.8rem;padding:3px 9px;border-radius:6px;border:1px solid var(--line);color:var(--muted)}
+.why{background:var(--accent-soft);border-radius:10px;padding:12px 14px;margin:12px 0 18px}
+.steps{list-style:none;margin:0 0 18px;padding:0;display:flex;flex-direction:column;gap:6px}
+.steps label{display:flex;gap:12px;align-items:flex-start;padding:10px 12px;border-radius:10px;background:var(--paper);min-height:48px;cursor:pointer}
+.steps input{width:22px;height:22px;margin:1px 0 0;accent-color:var(--accent);flex-shrink:0}
+.results{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:8px 0 18px}
+.results button{min-height:56px;border-radius:10px;border:2px solid var(--line);background:var(--surface);font-weight:700;font-size:.9rem;padding:4px}
+[data-r="pass"][aria-pressed="true"],[data-v="y"][aria-pressed="true"]{background:var(--pass)!important;border-color:var(--pass)!important;color:#fff}
+[data-r="partial"][aria-pressed="true"]{background:var(--warn)!important;border-color:var(--warn)!important;color:#fff}
+[data-r="fail"][aria-pressed="true"],[data-v="n"][aria-pressed="true"]{background:var(--fail)!important;border-color:var(--fail)!important;color:#fff}
+[data-r="na"][aria-pressed="true"],[data-v="na"][aria-pressed="true"]{background:var(--ink)!important;border-color:var(--ink)!important;color:var(--paper)}
+.qi{padding:14px 0;border-bottom:1px solid var(--line)}
+.qi:last-child{border-bottom:0}
+.qi .q{font-weight:700;margin-bottom:4px}
+.qi .sub{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;font-size:.8rem;color:var(--muted);margin-bottom:10px}
+.yn{display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:8px}
+.yn button{min-height:48px;border-radius:10px;border:2px solid var(--line);background:var(--surface);font-weight:700}
+.yn .cam{width:56px;display:flex;align-items:center;justify-content:center;color:var(--accent)}
+.yn .cam svg{width:22px;height:22px}
+.need-photo{color:var(--warn);font-weight:700}
+.thumbs{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.thumbs:empty{display:none}
+.thumb{position:relative;width:84px;height:84px;border-radius:10px;overflow:hidden;background:var(--sunk)}
+.thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.thumb button{position:absolute;top:4px;right:4px;width:28px;height:28px;border-radius:50%;border:0;background:rgba(0,0,0,.6);color:#fff;font-size:16px;line-height:1}
+.note-flag{background:var(--warn-soft);color:var(--warn);border-radius:10px;padding:10px 12px;font-size:.9rem;margin-bottom:14px}
+.stamp{font-size:.8rem;color:var(--muted);margin-top:4px}
+/* dashboard */
+.hero{display:grid;gap:20px;grid-template-columns:1fr}
+@media (min-width:760px){.hero{grid-template-columns:1.2fr 1fr;align-items:end}}
+.score{display:flex;align-items:flex-end;gap:10px}
+.score b{font-size:5rem;line-height:.85;font-weight:700;letter-spacing:-.02em}
+.score .pct{font-size:2rem;font-weight:700}
+.score-caption{margin-top:12px;max-width:50ch}
+.spark{width:100%;height:90px} .spark .ln{fill:none;stroke:var(--accent);stroke-width:2.5} .spark .ar{fill:var(--accent-soft)}
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:14px;overflow:hidden;margin-top:24px}
+@media (min-width:760px){.stats{grid-template-columns:repeat(var(--cols,4),1fr)}}
+.stat{background:var(--surface);padding:14px 16px}
+.stat b{display:block;font-size:1.6rem} .stat span{font-size:.85rem;color:var(--muted)}
+.bars{display:flex;flex-direction:column;gap:12px}
+.bar-row{display:grid;grid-template-columns:minmax(110px,190px) 1fr 48px;gap:12px;align-items:center;font-size:.92rem}
+.bar{height:10px;background:var(--sunk);border-radius:999px;overflow:hidden}
+.bar i{display:block;height:100%;border-radius:999px;background:var(--pass)} .bar i.mid{background:var(--warn)} .bar i.lowv{background:var(--fail)}
+.grid2{display:grid;gap:28px;grid-template-columns:1fr}
+@media (min-width:860px){.grid2{grid-template-columns:1fr 1fr}}
+.heat{display:grid;grid-template-columns:auto repeat(3,1fr);gap:4px;font-size:.8rem;max-width:360px}
+.heat .c{aspect-ratio:1.4;border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1.1rem}
+.heat .lbl{display:flex;align-items:center;justify-content:center;color:var(--muted);padding:2px;text-align:center}
+.h1v{background:var(--pass-soft);color:var(--pass)} .h2v{background:var(--warn-soft);color:var(--warn)} .h3v{background:var(--fail-soft);color:var(--fail)} .h4v{background:var(--fail);color:#fff}
+.exports{display:flex;flex-wrap:wrap;gap:10px}
+.callout{border-left:4px solid var(--accent);padding:4px 0 4px 14px;margin-top:14px;max-width:72ch}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:14px;background:var(--surface)}
+table.loc{width:100%;border-collapse:collapse;font-size:.92rem;min-width:760px}
+table.loc th{text-align:left;font-size:.82rem;color:var(--muted);font-weight:700;padding:10px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
+table.loc td{padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:middle}
+table.loc tr:last-child td{border-bottom:0}
+table.loc tbody tr{cursor:pointer}
+table.loc tbody tr:hover td{background:var(--paper)}
+table.loc .nm b{display:block} table.loc .nm span{font-size:.82rem;color:var(--muted)}
+.minibar{display:flex;align-items:center;gap:8px}
+.minibar .bar{width:70px;height:8px}
+.status{display:inline-flex;align-items:center;gap:6px;font-weight:700;font-size:.85rem;white-space:nowrap}
+.status i{width:10px;height:10px;border-radius:50%;display:inline-block}
+.status.green{color:var(--pass)} .status.green i{background:var(--pass)}
+.status.amber{color:var(--warn)} .status.amber i{background:var(--warn)}
+.status.red{color:var(--fail)} .status.red i{background:var(--fail)}
+.back{display:inline-flex;align-items:center;gap:6px;margin-bottom:14px}
+.locrow{display:grid;grid-template-columns:1.3fr 1fr 1.2fr auto;gap:8px;margin-bottom:8px;align-items:center}
+@media (max-width:640px){.locrow{grid-template-columns:1fr 1fr}.locrow button{grid-column:span 2}}
+.progs label{display:flex;gap:12px;align-items:flex-start;padding:10px 0;cursor:pointer}
+.progs input{width:22px;height:22px;accent-color:var(--accent);flex-shrink:0;margin-top:2px}
+/* onboarding */
+.onboard{max-width:600px;margin:4vh auto 0}
+.onboard h1{font-size:2.2rem;margin:18px 0 10px}
+.onboard .lead{font-size:1.1rem;color:var(--muted);margin-bottom:26px;max-width:50ch}
+.facts{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:0 0 28px}
+.facts div{border-top:3px solid var(--accent);padding-top:8px;font-size:.9rem}
+.facts b{display:block;font-size:1.3rem}
+#toast{position:fixed;left:50%;bottom:96px;transform:translateX(-50%) translateY(20px);opacity:0;background:var(--ink);color:var(--paper);padding:12px 18px;border-radius:10px;z-index:50;transition:all .25s;pointer-events:none;max-width:90vw;text-align:center}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+@media (min-width:900px){#toast{bottom:32px}}
+#print-root{display:none}
+.rgrid{display:grid;gap:12px;grid-template-columns:1fr}
+@media (min-width:760px){.rgrid{grid-template-columns:repeat(2,1fr)}}
+.rcard{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;display:flex;flex-direction:column;justify-content:space-between;gap:14px}
+.rcard .aud{font-size:.85rem;font-weight:700;color:var(--accent);margin:4px 0 6px}
+.btn:disabled{opacity:.45;cursor:default}
+.yn.num{grid-template-columns:1fr auto auto}
+.numin{display:flex;align-items:center;gap:8px}.numin span{font-weight:700}
+.numstat{font-size:.85rem;font-weight:700;margin-top:6px}
+@media print{body::before{display:none}.shell,#toast,dialog{display:none!important}#print-root{display:block}:root{padding:0}}
+</style>
+</head>
+<body>
+<div class="shell">
+  <nav class="nav" id="nav" aria-label="Main"></nav>
+  <div class="main"><header class="top" id="top"></header><main id="view"></main></div>
+</div>
+<dialog id="sheet" aria-label="Details"><div class="sheet" id="sheet-body"></div></dialog>
+<input type="file" id="photo-input" accept="image/*" hidden>
+<input type="file" id="restore-input" accept="application/json,.json" hidden>
+<div id="toast" role="status" aria-live="polite"></div>
+<div id="print-root"></div>
+<script>
+/* ===================== Programs and control library ===================== */
+const APP='AuditTrack Pro';
+const PROGS={phys:'Physical security rounds',ops:'Daily open and close',osha:'OSHA and safety',hipaa:'HIPAA security and privacy'};
+const PROG_DESC={phys:'A 3-minute weekly photo walk-through of HIPAA physical safeguards.',ops:'2-minute opening and closing checklists every business day.',osha:'Eyewash, sharps, exits, extinguishers, bloodborne pathogens, and more.',hipaa:'The Security Rule risk analysis split into short recurring checks, some handled once for the whole organization.'};
+const CATS={admin:'Administrative',physical:'Physical',technical:'Technical',privacy:'Privacy & patient rights',breach:'Incidents & continuity',vendor:'Vendors & BAAs'};
+const CSF={GV:'Govern',ID:'Identify',PR:'Protect',DE:'Detect',RS:'Respond',RC:'Recover'};
+const HICP={1:'Email protection',2:'Endpoint protection',3:'Access management',4:'Data protection & loss prevention',5:'Asset management',6:'Network management',7:'Vulnerability management',8:'Incident response',9:'Connected medical devices',10:'Governance & oversight'};
+const FREQ={daily:'Every business day',weekly:'Weekly',monthly:'Monthly',quarterly:'Quarterly',semiannual:'Twice a year',annual:'Yearly'};
+const PER_YEAR={daily:260,weekly:52,monthly:12,quarterly:4,semiannual:2,annual:1};
+// check-style task
+function C(id,prog,cat,freq,min,cite,csf,hicp,title,why,steps,ev,threat,l,i,x){return Object.assign({id,prog,kind:'check',cat,freq,min,cite,csf,hicp,title,why,steps,ev,threat,l,i,scope:'site'},x||{})}
+// round-style task (yes/no items, photo proof)
+function R(id,prog,cat,freq,min,csf,title,why,items,threat,l,i,x){return Object.assign({id,prog,kind:'round',cat,freq,min,csf,hicp:null,title,why,items,threat,l,i,scope:'site'},x||{})}
+const H=s=>'HIPAA §'+s, O=s=>'OSHA 29 CFR '+s;
+const ORG={scope:'org'};
+const LIB=[
+R('phys-round','phys','physical','weekly',3,'PR.AA','Weekly physical security round','A quick walk-through with photo proof. Physical safeguards are where small lapses turn into reportable breaches.',[
+  {q:'Paper records locked in cabinets when not in use',photo:true,cite:H('164.530(c)')},
+  {q:'Server or network closet door locked',photo:true,cite:H('164.310(a)(1)')},
+  {q:'Check-in screens face away from the waiting area or have privacy filters',photo:true,cite:H('164.310(c)')},
+  {q:'No PHI visible at printers, fax, or the front desk',cite:H('164.530(c)')},
+  {q:'Shred bins locked and not overflowing',cite:H('164.310(d)(2)(i)')},
+  {q:'Visitor and vendor log filled in this week',cite:H('164.310(a)(2)(iii)')},
+  {q:'No unattended, unlocked workstations seen',cite:H('164.312(a)(2)(iii)')}],'Physical safeguard lapse exposes PHI',2,2),
+R('open','ops','ops','daily',2,null,'Opening checklist','Catches overnight problems before the first patient arrives.',[
+  {q:'Building secure on arrival: alarm disarmed, no signs of forced entry',cite:H('164.310(a)(1)')},
+  {q:'Vaccine and medication refrigerator temperature',num:{unit:'°F',min:36,max:46},photo:true,cite:'CDC storage and handling'},
+  {q:'Emergency exits unlocked and clear',cite:O('1910.37(a)(3)')},
+  {q:'AED status indicator shows ready',cite:'Manufacturer check'},
+  {q:'Exam rooms cleaned and stocked',cite:'Infection control'},
+  {q:'No PHI left out from the day before',cite:H('164.530(c)')}],'Site opens with an unresolved safety or privacy issue',2,2,{noRisk:true}),
+R('close','ops','ops','daily',2,null,'Closing checklist','Most after-hours exposure comes from things left unlocked or logged in.',[
+  {q:'All workstations logged off or locked',cite:H('164.312(a)(2)(iii)')},
+  {q:'Paper records put away and cabinets locked',photo:true,cite:H('164.530(c)')},
+  {q:'Medication and controlled-substance storage locked',cite:'DEA 21 CFR 1301.75'},
+  {q:'Exam rooms and shared surfaces disinfected',cite:'Infection control'},
+  {q:'Keys and badges accounted for',cite:H('164.310(a)(2)(iii)')},
+  {q:'Doors locked and alarm set',cite:H('164.310(a)(1)')}],'Site left unsecured overnight',2,2,{noRisk:true}),
+// OSHA
+C('eyewash','osha','safety','weekly',2,O('1910.151(c)')+'; ANSI Z358.1',null,null,'Activate eyewash stations','ANSI Z358.1 calls for weekly activation so the water is clean and the unit works when someone needs it.',['Run each eyewash station until the water runs clear','Confirm caps are in place and the path is unobstructed','Initial and date the tag'],'Photo of the tag','Eye exposure injury worsened by a failed station',1,3),
+C('sharps','osha','safety','weekly',2,O('1910.1030(d)(4)(iii)(A)'),null,null,'Check sharps containers','Overfilled sharps containers are a leading cause of needlestick injuries.',['Check every container is below the fill line','Close and replace any that are full','Confirm containers are upright and within reach where sharps are used'],'Photo of containers','Needlestick injury',2,3),
+C('extinguishers','osha','safety','monthly',3,O('1910.157(e)(2)'),null,null,'Inspect fire extinguishers','OSHA requires a monthly visual check of every portable extinguisher.',['Confirm each extinguisher is mounted, visible, and unobstructed','Confirm the gauge is in the green and the pin and seal are intact','Initial the monthly tag'],'Photo of a tag','Extinguisher fails in a fire',1,3),
+C('exits','osha','safety','monthly',3,O('1910.37'),null,null,'Walk exit routes and electrical panels','Blocked exits and electrical panels are among the most cited OSHA items in offices.',['Walk every exit route and confirm nothing blocks it','Confirm exit signs are lit','Confirm 3 feet of clearance in front of electrical panels'],'Notes','Blocked egress during an emergency',1,3),
+C('firstaid','osha','safety','monthly',3,O('1910.151(b)'),null,null,'Restock first aid supplies','First aid supplies must be readily available.',['Check the first aid kit against its contents list','Replace used or expired items','Confirm staff know where it is'],'Notes','Delayed first aid',1,2),
+C('regwaste','osha','safety','monthly',5,O('1910.1030(d)(4)(iii)'),null,null,'Check regulated medical waste','Biohazard waste must be contained, labeled, and picked up by a licensed hauler.',['Confirm biohazard containers are closed, labeled, and not overfilled','Confirm the storage area is secured','Confirm the latest pickup manifest is on file'],'Pickup manifest','Improper biohazard handling',1,3),
+C('sds','osha','safety','quarterly',10,O('1910.1200(g)(8)'),null,null,'Check Safety Data Sheets','Staff must be able to reach an SDS for every hazardous chemical on site.',['Confirm the SDS binder or app is accessible to all staff','Add sheets for any new chemicals or cleaning products','Remove sheets for products no longer used'],'SDS index','Chemical exposure without guidance',1,2),
+C('sharps-log','osha','safety','quarterly',5,O('1910.1030(h)(5)'),null,null,'Review the sharps injury log','Every needlestick should be logged and reviewed for prevention.',['Open the sharps injury log','Confirm every incident this quarter is recorded','Note any device or practice changes to consider'],'Log reviewed','Repeat injuries not prevented',1,2),
+C('hepb','osha','safety','quarterly',5,O('1910.1030(f)(2)'),null,null,'Confirm hepatitis B vaccine was offered to new staff','The vaccine must be offered within 10 working days to anyone with exposure risk.',['List new clinical staff this quarter','Confirm each was offered the vaccine','Confirm signed declinations are on file where applicable'],'Offer or declination records','Unprotected staff exposure',1,3),
+C('bbp-training','osha','safety','annual',15,O('1910.1030(g)(2)'),null,null,'Confirm bloodborne pathogens training','Annual training is required for every employee with occupational exposure.',['List staff with exposure risk','Confirm each completed this year’s training','Save the training records'],'Training roster','Untrained staff exposure',2,2),
+C('ecp','osha','safety','annual',20,O('1910.1030(c)(1)(iv)'),null,null,'Review the exposure control plan','The plan must be reviewed every year, including safer sharps devices, with input from frontline staff.',['Review the plan for changes in procedures or devices','Ask frontline staff about safer sharps options','Record the review date'],'Plan with review date','Outdated exposure control plan',1,2),
+C('eap','osha','safety','annual',15,O('1910.38'),null,null,'Review the emergency action plan with staff','Staff should know evacuation routes, meeting points, and who calls 911.',['Review the plan and update contacts','Walk staff through routes and the meeting point','Note anything that needs fixing'],'Attendance list','Confused evacuation',1,3),
+C('osha300a','osha','safety','annual',5,O('1904.32'),null,null,'Post the OSHA 300A summary','If your practice must keep injury logs, the 300A summary goes up February 1 to April 30. Many physician, PT, and outpatient offices are partially exempt: mark N/A if so. Severe injuries must still be reported to OSHA by all employers.',['Confirm whether your practice is partially exempt','If not, complete and certify the 300A','Post it where employee notices go'],'Photo of the posting','Recordkeeping citation',1,1,{fixed:[1,1]}),
+// HIPAA
+C('sec-officer','hipaa','admin','annual',5,H('164.308(a)(2)'),'GV.RR',10,'Confirm the Security Officer designation','HIPAA requires one named person accountable for security, and auditors ask for it first.',['Find the written Security Officer designation','Confirm the name is current and signed','If it changed, update and re-sign it'],'Signed designation','No one accountable for security decisions',1,2,ORG),
+C('priv-officer','hipaa','privacy','annual',5,H('164.530(a)'),'GV.RR',10,'Confirm the Privacy Officer designation','A named Privacy Officer handles patient complaints and privacy questions.',['Find the written Privacy Officer designation','Confirm the name and contact info are current','Make sure site managers know who it is'],'Signed designation','Privacy complaints go unhandled',1,2,ORG),
+C('assets','hipaa','technical','quarterly',15,H('164.310(d)(1)'),'ID.AM',5,'Update the device inventory','You can’t protect devices you don’t know about. The inventory is the backbone of the risk analysis.',['Walk each room and list computers, laptops, tablets, phones, and printers','Note who uses each and whether it stores PHI','Mark retired or missing devices'],'Updated inventory list','Unknown devices with PHI go unprotected',2,3),
+C('encrypt','hipaa','technical','quarterly',10,H('164.312(a)(2)(iv)'),'PR.DS',2,'Check laptops and tablets are encrypted','A lost encrypted laptop is usually not a reportable breach. A lost unencrypted one usually is.',['On each laptop, confirm BitLocker or FileVault is on','Confirm tablets and phones with PHI require a passcode','List any device that isn’t encrypted'],'Screenshot of encryption status','Lost or stolen device exposes PHI',2,3),
+C('patch','hipaa','technical','monthly',5,H('164.308(a)(1)(ii)(B)'),'PR.PS',7,'Confirm computers are up to date','Most ransomware gets in through software that’s missing updates.',['Spot-check 3 workstations for pending updates','Confirm the IT patch report shows no failures','Flag any computer on an unsupported operating system'],'Patch report','Unpatched systems exploited',2,3),
+C('av','hipaa','technical','monthly',5,H('164.308(a)(5)(ii)(B)'),'DE.CM',2,'Confirm antivirus or EDR is running everywhere','Endpoint protection is the alarm system on every computer.',['Open the EDR console or ask IT','Confirm every computer checked in within 7 days','Note any unresolved alerts'],'Console screenshot','Malware runs undetected',2,3),
+C('backup-check','hipaa','technical','monthly',3,H('164.308(a)(7)(ii)(A)'),'RC.RP',4,'Confirm backups succeeded','Backups that silently fail are discovered at the worst moment.',['Check the backup report','Confirm critical systems backed up in the last 24 hours','Confirm at least one copy is offsite or offline'],'Backup report','Data can’t be recovered after ransomware',2,3,ORG),
+C('restore','hipaa','technical','quarterly',15,H('164.308(a)(7)(ii)(D)'),'RC.RP',4,'Test restoring from backup','A restore test is the only proof a backup works.',['Restore one file or record from last week','Confirm it opens and is complete','Write down how long it took'],'Restore confirmation','Backups fail when needed',2,3,ORG),
+C('offboard','hipaa','admin','monthly',5,H('164.308(a)(3)(ii)(C)'),'PR.AA',3,'Remove access for anyone who left','Former staff with working logins are a common finding in OCR investigations.',['List anyone who left this month, including temps and students','Confirm EHR, email, and practice-management logins are disabled','Collect keys, badges, and devices'],'Termination checklist','Former workforce still accesses PHI',2,3),
+C('mfa','hipaa','technical','quarterly',10,H('164.312(d)'),'PR.AA',3,'Check multi-factor sign-in is on','MFA blocks most stolen-password attacks, and cyber insurers expect it.',['Confirm MFA is required for email','Confirm MFA for remote access and the EHR where offered','List accounts without MFA'],'Admin console screenshot','Account takeover through stolen passwords',3,3,ORG),
+C('logs','hipaa','technical','monthly',10,H('164.308(a)(1)(ii)(D)'),'DE.CM',3,'Spot-check EHR access logs','Reviewing who opened which charts catches snooping.',['Run the EHR access report for one staff member or patient','Look for access without a care reason','Record what you checked and found'],'Report name and date','Inappropriate record access unnoticed',2,2),
+C('autolock','hipaa','technical','quarterly',5,H('164.312(a)(2)(iii)'),'PR.AA',2,'Test that screens lock automatically','An unattended, unlocked screen is open access to PHI.',['Leave 3 workstations idle and confirm they lock within 15 minutes','Confirm exam-room computers lock sooner where possible','Note any that don’t lock'],'Workstations tested','Unattended screens expose PHI',2,2),
+C('shared-logins','hipaa','technical','quarterly',5,H('164.312(a)(2)(i)'),'PR.AA',3,'Look for shared logins','Each person needs their own login so actions can be traced.',['Ask each area whether anyone shares a login','Look for generic accounts like “frontdesk”','Plan named replacements'],'Notes','Actions can’t be traced to a person',2,2),
+C('keys','hipaa','physical','quarterly',10,H('164.310(a)(2)(iii)'),'PR.AA',3,'Reconcile keys, badges, and alarm codes','Keys and codes tend to outlive the people who had them.',['List who has keys, badges, and codes','Compare against current staff','Change codes or rekey if anything is unaccounted for'],'Key and code list','Unauthorized after-hours entry',1,3),
+C('disposal','hipaa','physical','quarterly',5,H('164.310(d)(2)(i)'),'PR.DS',4,'Confirm old devices were wiped or destroyed','Copiers, drives, and old PCs keep PHI after they leave.',['List devices retired this quarter, including copiers','Confirm each has a wipe or destruction record','File the records with the inventory'],'Destruction records','PHI recovered from discarded devices',1,3),
+C('phish','hipaa','admin','monthly',5,H('164.308(a)(5)(ii)(A)'),'PR.AT',1,'Share a 2-minute phishing reminder','Short monthly reminders work better than one long annual training.',['Share this month’s tip at huddle or by email','Remind staff how to report a suspicious email','Record that it went out'],'Copy of the reminder','Staff fall for phishing',3,3),
+C('training','hipaa','admin','annual',15,H('164.308(a)(5)(i)'),'PR.AT',10,'Confirm annual HIPAA training is complete','Documented training for every workforce member is a core requirement.',['List the site’s workforce, including part-time staff','Confirm each completed this year’s training','Save completion records'],'Training roster','Workforce unaware of HIPAA duties',2,2),
+C('onboard','hipaa','admin','quarterly',5,H('164.308(a)(3)(ii)(B)'),'PR.AT',3,'Check new hires were onboarded correctly','New staff need training and the right access before they see PHI.',['List new hires this quarter','Confirm confidentiality agreements and training','Confirm access matches role'],'Onboarding checklist','New staff get excess access or no training',2,2),
+C('sanctions','hipaa','admin','annual',5,H('164.308(a)(1)(ii)(C)'),'GV.PO',10,'Review the sanctions policy','You need, and must apply, consequences for HIPAA violations.',['Confirm the policy is current','Confirm violations this year were documented with action taken','Remind site managers how to apply it'],'Policy with review date','Violations not handled consistently',1,2,ORG),
+C('baa','hipaa','vendor','quarterly',15,H('164.308(b)(1)'),'GV.SC',10,'Check every vendor with PHI has a BAA','Missing business associate agreements are among the most common OCR findings.',['List vendors who see PHI: EHR, billing, IT, shredding, answering service, cloud apps','Confirm a signed BAA is on file for each','Request any missing BAA today'],'BAA list','Vendors handle PHI without safeguards',2,3,ORG),
+C('new-vendors','hipaa','vendor','quarterly',5,H('164.308(b)(1)'),'GV.SC',10,'Review new apps and vendors','New tools, including AI scribes and texting apps, often arrive without a BAA.',['Ask site managers what new apps staff started using','Check whether any touch PHI','Add them to the BAA list if they do'],'Notes','Unvetted apps store PHI',2,3,ORG),
+C('ir-contacts','hipaa','breach','quarterly',5,H('164.308(a)(6)'),'RS.MA',8,'Update incident response contacts','In a ransomware event you need these numbers in the first hour.',['Confirm numbers for IT, cyber insurance, and legal counsel','Send the updated sheet to every site','Confirm a printed copy is kept offline'],'Contact sheet','Slow incident response',2,3,ORG),
+C('tabletop','hipaa','breach','annual',15,H('164.308(a)(7)(ii)(D)'),'RS.MA',8,'Run a 15-minute downtime drill','Walking through “the computers are down” once a year makes the real day survivable.',['Gather key staff for 15 minutes','Walk through: the EHR is down for 3 days. How do we see patients?','Record gaps and add them as risks'],'Drill notes','Site can’t operate during an outage',2,3),
+C('wifi','hipaa','technical','quarterly',5,H('164.312(e)(1)'),'PR.IR',6,'Confirm guest Wi-Fi is separate','Patients on the same network as clinical computers is a direct path in.',['Confirm guest Wi-Fi is a separate network','Confirm the staff password isn’t shared with patients','Change it if staff have left'],'IT confirmation','Guests reach clinical systems',2,3),
+C('devices-med','hipaa','technical','semiannual',10,H('164.310(d)(1)'),'ID.AM',9,'Check connected medical devices','Connected devices often run old software.',['List medical devices on the network','Note software version and vendor support status','Ask vendors about patches'],'Device list','Vulnerable medical devices compromised',2,3),
+C('email-sec','hipaa','technical','quarterly',5,H('164.312(e)(2)(ii)'),'PR.DS',1,'Check email protections','Email is the most common way PHI leaks and malware gets in.',['Confirm spam and phishing filtering is on','Confirm external emails show a warning banner','Confirm SPF, DKIM, and DMARC are set up for your email domain','Confirm staff know how to send encrypted email'],'Screenshot of settings','PHI sent unencrypted or malware delivered',3,2,ORG),
+C('mobile','hipaa','technical','quarterly',5,H('164.310(d)(1)'),'PR.DS',2,'Check phones that access PHI','Phones with email or EHR apps need the same protection as laptops.',['List phones with email or EHR access','Confirm each has a passcode and screen lock','Confirm remote wipe is possible'],'Device list','Lost phone exposes PHI',2,2),
+C('roles','hipaa','admin','semiannual',15,H('164.308(a)(4)'),'PR.AA',3,'Review who can see what in the EHR','Minimum necessary means people only see what their role needs.',['Export the EHR user list with roles','Look for unneeded admin rights','Fix roles that don’t match duties'],'Reviewed user list','Excessive access to PHI',2,2,ORG),
+C('policies','hipaa','admin','annual',20,H('164.316(b)'),'GV.PO',10,'Review and date policies and procedures','Policies must be reviewed, updated, and kept for six years.',['Open the HIPAA policy set','Review each for operational changes','Record the review date and keep old versions'],'Policy index','Outdated or missing policies',1,2,ORG),
+C('npp','hipaa','privacy','annual',5,H('164.520'),'GV.PO',10,'Check the Notice of Privacy Practices is posted','The notice must be posted at each site and offered to new patients.',['Confirm the notice is posted in the waiting area','Confirm new patients receive it','Confirm acknowledgments are recorded'],'Photo of the posted notice','Patients not informed of rights',1,1),
+C('access-requests','hipaa','privacy','monthly',5,H('164.524'),'GV.OC',10,'Check patient record requests are on time','OCR has fined dozens of practices for slow responses to record requests.',['Open the record request log','Confirm every request was fulfilled within 30 days','Confirm fees were reasonable and cost-based'],'Request log','Late responses to access requests',2,2),
+C('incident-review','hipaa','breach','quarterly',5,H('164.408'),'RS.CO',8,'Review the incident and breach log','Breaches under 500 people must be reported to HHS within 60 days after the year ends.',['Review incidents logged across sites this quarter','Confirm each was assessed for breach','Confirm required notices went out within 60 days'],'Log reviewed','Missed notification deadlines',1,3,ORG),
+C('insurance','hipaa','admin','annual',10,H('164.308(a)(1)(ii)(B)'),'GV.RM',10,'Check cyber insurance requirements are met','Claims get denied when controls promised on the application weren’t in place.',['Find the policy and renewal date','Compare required controls with what’s in place','Note gaps before renewal'],'Policy summary','Cyber claim denied',1,3,ORG),
+C('contingency','hipaa','breach','annual',10,H('164.308(a)(7)(ii)(B)'),'RC.RP',4,'Review the downtime and recovery plan','Each site needs to keep seeing patients when systems are down, and know what gets restored first.',['Confirm paper downtime forms are stocked','Confirm the downtime and recovery plan is current and printed','Confirm which systems are restored first'],'Plan with review date','Care disrupted during outages',2,3),
+C('facility-maint','hipaa','physical','semiannual',5,H('164.310(a)(2)(iv)'),'PR.AA',10,'Log security-related facility repairs','Repairs to doors, locks, and alarms must be documented.',['List repairs to doors, locks, alarms, or walls since the last check','Confirm each is recorded with the date and vendor','File the records'],'Repair log','Undocumented changes to physical security',1,2),
+C('firewall','hipaa','technical','quarterly',5,H('164.312(e)(1)'),'PR.PS',6,'Confirm the site firewall is maintained','Outdated firewall firmware is a common entry point.',['Confirm firmware is current','Confirm default admin passwords were changed','Confirm remote management is restricted'],'IT confirmation','Network perimeter compromised',2,3),
+C('remote','hipaa','technical','quarterly',5,H('164.312(e)(1)'),'PR.AA',3,'Check remote access is locked down','Exposed remote desktop is one of the most common ransomware entry points, and every cyber insurer asks about it.',['Confirm no remote desktop (RDP) is open directly to the internet','Confirm VPN and remote tools require MFA','Remove remote tools nobody uses'],'Scan result or IT confirmation','Remote access exploited',2,3,ORG),
+C('admin-accts','hipaa','technical','quarterly',10,H('164.308(a)(4)(ii)(B)'),'PR.AA',3,'Review administrator accounts','Attackers go after admin accounts first, and carriers ask whether they are separate and protected by MFA.',['List accounts with admin rights in email, the EHR, and servers','Confirm admins use separate admin accounts with MFA','Remove admin rights that aren’t needed'],'Admin account list','Privileged account takeover',2,3,ORG),
+C('login-monitor','hipaa','technical','monthly',5,H('164.308(a)(5)(ii)(C)'),'DE.CM',3,'Review failed and risky sign-ins','Repeated failures or sign-ins from unusual places are early signs of an attack.',['Open the sign-in report for email and the EHR','Look for repeated failures or unusual locations','Reset passwords and investigate anything suspicious'],'Report screenshot','Account attack goes unnoticed',2,2,ORG),
+C('passwords','hipaa','technical','annual',5,H('164.308(a)(5)(ii)(D)'),'PR.AA',3,'Confirm password rules are enforced','Password rules should be enforced by the system, not just written down.',['Confirm minimum length and lockout settings in email and the EHR','Confirm default passwords are changed on new devices','Record the current settings'],'Settings screenshot','Weak passwords guessed',2,2,ORG),
+C('integrity','hipaa','technical','annual',10,H('164.312(c)(1)'),'PR.DS',4,'Confirm records can’t be altered without a trace','You must be able to show electronic records weren’t improperly changed or destroyed.',['Confirm the EHR audit trail is on and regular users can’t disable it','Confirm amendments are tracked, not overwritten','Confirm backups are protected from deletion (immutable or offline)'],'Settings confirmation','Records altered or destroyed undetected',1,3,ORG),
+C('emergency-access','hipaa','technical','annual',5,H('164.312(a)(2)(ii)'),'PR.AA',3,'Confirm emergency (break-glass) access works','You need a documented way into records if the usual login fails.',['Confirm the emergency access procedure is written down','Confirm who can use it and where credentials are kept','Confirm its use is logged'],'Procedure document','Can’t reach records in an emergency',1,3,ORG),
+C('mdr','hipaa','technical','monthly',5,H('164.308(a)(1)(ii)(D)'),'DE.CM',8,'Confirm 24/7 security monitoring is active','Carriers increasingly expect alerts to be watched around the clock by a managed detection or SOC service.',['Confirm the monitoring service covers every site and device','Review the monthly report for open alerts','Confirm escalation contacts are current'],'Monthly monitoring report','Attack not detected after hours',2,3,ORG),
+C('sra-signoff','hipaa','admin','annual',20,H('164.308(a)(1)(ii)(A)'),'ID.RA',10,'Prepare the annual risk analysis for sign-off','The risk analysis is the most-cited HIPAA failure. This rolls up the year across all sites into one signed record.',['Review open risks across sites','Download the executive report from the dashboard','Record leadership sign-off'],'Signed report','No current risk analysis',2,3,Object.assign({lastMonth:true},ORG))
+];
+const LIBMAP=Object.fromEntries(LIB.map(t=>[t.id,t]));
+
+/* ===================== Utilities ===================== */
+const DAY=864e5;
+const sod=d=>{const x=new Date(d);x.setHours(0,0,0,0);return x};
+const addDays=(d,n)=>{const x=new Date(d);x.setDate(x.getDate()+n);return x};
+const addMonths=(d,n)=>{const x=new Date(d);const day=x.getDate();x.setDate(1);x.setMonth(x.getMonth()+n);const last=new Date(x.getFullYear(),x.getMonth()+1,0).getDate();x.setDate(Math.min(day,last));return x};
+const startOfWeek=d=>{const x=sod(d);return addDays(x,-((x.getDay()+6)%7))};
+const fmt=d=>new Date(d).toLocaleDateString(undefined,{month:'short',day:'numeric'});
+const fmtY=d=>new Date(d).toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'});
+const fmtT=d=>new Date(d).toLocaleString(undefined,{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});
+const isoDay=d=>{const x=new Date(d);return x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0')};
+const parseDay=s=>{const p=String(s).split('-').map(Number);return new Date(p[0],p[1]-1,p[2])};
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid=()=>Math.random().toString(36).slice(2,9)+Date.now().toString(36).slice(-3);
+const $=s=>document.querySelector(s);
+const LVL={1:'Low',2:'Medium',3:'High'};
+const rate=(l,i)=>{const s=l*i;return s>=9?['Critical','crit',4]:s>=6?['High','high',3]:s>=3?['Medium','med',2]:['Low','low',1]};
+const dueDaysFor=s=>s>=9?14:s>=6?30:s>=3?60:90;
+const PTS={pass:1,partial:.5,fail:0};
+const RES={pass:'Passed',partial:'Partly met',fail:'Not met',na:'N/A'};
+const STATUS={green:'On track',amber:'Needs attention',red:'At risk'};
+function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(toast._t);toast._t=setTimeout(()=>t.classList.remove('show'),3000)}
+const ICON={
+  tasks:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></svg>',
+  risks:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 2.5 20h19L12 3z"/><path d="M12 10v4M12 17.5v.01"/></svg>',
+  dash:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>',
+  settings:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg>',
+  check:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5 9-10"/></svg>',
+  x:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>',
+  half:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M6 12h12"/></svg>',
+  close:'<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>',
+  cam:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>',
+  bell:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 16V11a6 6 0 1 1 12 0v5l2 2H4z"/><path d="M10 21h4"/></svg>',
+  reports:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5M9 13h7M9 17h7"/></svg>',
+  logo:'<svg viewBox="0 0 32 32" fill="none"><rect x="3" y="3" width="26" height="26" rx="7" fill="var(--accent)"/><path d="m9.5 16.5 4.5 4.5 8.5-10" stroke="var(--accent-ink)" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+};
+
+/* ===================== Storage ===================== */
+const KEY='audittrack:v2';
+let S=null;
+function loadState(){try{const r=localStorage.getItem(KEY);return r?JSON.parse(r):null}catch(e){return null}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){toast('This device couldn’t save. Download a backup from Settings.')}}
+function blank(org,locs){return {v:2,org,locations:locs,done:{},risks:[],incidents:[],assign:{},acks:{},signoffs:[],ins:{},ui:{role:'manager',tab:'tasks',seg:'week',rseg:'risks',loc:locs[0]?locs[0].id:'corp',region:'all',rloc:'all',drill:null}}}
+const EVF={};
+const idb={db:null,
+  open(){return new Promise(res=>{try{const r=indexedDB.open('audittrack-evidence',1);r.onupgradeneeded=()=>r.result.createObjectStore('ev',{keyPath:'id'});r.onsuccess=()=>{this.db=r.result;res(this.db)};r.onerror=()=>res(null)}catch(e){res(null)}})},
+  async tx(mode,fn){const db=this.db||await this.open();if(!db)throw new Error('no-idb');return new Promise((res,rej)=>{const t=db.transaction('ev',mode);const req=fn(t.objectStore('ev'));t.oncomplete=()=>res(req?req.result:undefined);t.onerror=()=>rej(t.error)})},
+  async put(r){try{await this.tx('readwrite',s=>s.put(r))}catch(e){EVF[r.id]=r}},
+  async get(id){if(EVF[id])return EVF[id];try{return await this.tx('readonly',s=>s.get(id))}catch(e){return null}},
+  async del(id){delete EVF[id];try{await this.tx('readwrite',s=>s.delete(id))}catch(e){}},
+  async all(){try{return ((await this.tx('readonly',s=>s.getAll()))||[]).concat(Object.values(EVF))}catch(e){return Object.values(EVF)}},
+  async clear(){try{await this.tx('readwrite',s=>s.clear())}catch(e){}}
+};
+let DL=null;
+(async()=>{try{if(window.claude&&typeof window.claude.use==='function')DL=await window.claude.use('downloads')}catch(e){DL=null}})();
+async function saveFile(name,data){
+  if(DL){try{await DL.save({filename:name,data});toast('Saved '+name)}catch(e){if(e&&e.code==='declined')return;toast('That file couldn’t be saved here. Try Print instead.')}return}
+  if(!window.claude){const ext=name.split('.').pop();const type={csv:'text/csv',json:'application/json',pdf:'application/pdf',xlsx:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}[ext]||'text/html';const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([data],{type}));a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500);return}
+  toast('Downloads aren’t available in this view. Use Print instead.');
+}
+
+/* ===================== Entities and schedule ===================== */
+function corp(){return {id:'corp',name:'Shared services',region:'Organization-wide',manager:S.org.it||S.org.exec,corp:true}}
+function ents(){return [corp(),...S.locations]}
+function ent(id){return id==='corp'?corp():S.locations.find(l=>l.id===id)}
+function tasksFor(e){return LIB.filter(t=>S.org.progs.includes(t.prog)&&(e.corp?t.scope==='org':t.scope!=='org'))}
+function assignee(eid,t){const e=ent(eid);return S.assign[eid+':'+t.id]||(t.cat==='technical'&&S.org.it?S.org.it:e?e.manager:'')}
+function people(eid){const e=ent(eid);return [...new Set([e&&e.manager,S.org.exec,S.org.it,...S.locations.map(l=>l.manager)].filter(Boolean))]}
+let SCH,OCCE={},SERIES={},OMAP={};
+function buildSchedule(){
+  const start=parseDay(S.org.start),today=sod(new Date());
+  let y=0;while(addMonths(start,12*(y+1))<=today)y++;
+  const ys=addMonths(start,12*y),ye=addMonths(start,12*(y+1));
+  OCCE={};SERIES={};OMAP={};
+  for(const e of ents()){
+    const all=[];
+    tasksFor(e).forEach(t=>{
+      const i=LIB.indexOf(t),ser=[];
+      const push=(n,d)=>{d=sod(d);if(d<ys||d>=ye)return;ser.push({id:e.id+':'+t.id+':'+y+':'+n,eid:e.id,task:t,due:d})};
+      if(t.freq==='daily'){let n=0;for(let d=new Date(ys);d<ye;d=addDays(d,1),n++){const w=d.getDay();if(w>0&&w<6)push(n,d)}}
+      else if(t.freq==='weekly'){let f=addDays(startOfWeek(ys),4);for(let n=0;f<ye;n++,f=addDays(f,7))push(n,f)}
+      else if(t.freq==='monthly')for(let m=0;m<12;m++)push(m,addDays(addMonths(ys,m),(i*5)%24+2));
+      else if(t.freq==='quarterly')for(let q=0;q<4;q++)push(q,addDays(addMonths(ys,3*q+(i%3)),(i*7)%22+2));
+      else if(t.freq==='semiannual')for(let h=0;h<2;h++)push(h,addDays(addMonths(ys,6*h+(i%6)),12));
+      else if(t.fixed){let d=new Date(ys.getFullYear(),t.fixed[0],t.fixed[1]);if(d<ys)d=new Date(ys.getFullYear()+1,t.fixed[0],t.fixed[1]);push(0,d)}
+      else push(0,addDays(addMonths(ys,t.lastMonth?11:(i*5)%11),(i*3)%18+4));
+      ser.sort((a,b)=>a.due-b.due);ser.forEach((o,k)=>{o.next=ser[k+1]||null});
+      SERIES[e.id+':'+t.id]=ser;all.push(...ser);
+    });
+    all.sort((a,b)=>a.due-b.due);OCCE[e.id]=all;all.forEach(o=>{OMAP[o.id]=o});
+  }
+  SCH={ys,ye,y,today};
+}
+const sup=o=>!!(o.next&&o.next.due<=SCH.today);
+const overdueOf=eid=>(OCCE[eid]||[]).filter(o=>o.due<SCH.today&&!S.done[o.id]&&!sup(o)&&o.task.freq!=='daily');
+const missedOf=eid=>(OCCE[eid]||[]).filter(o=>o.due<SCH.today&&!S.done[o.id]&&sup(o)&&o.task.freq!=='daily');
+
+/* ===================== Scoring ===================== */
+function entScore(eid,asOf){
+  asOf=asOf||SCH.today;const end=addDays(asOf,1).getTime();const b={};
+  for(const o of OCCE[eid]||[]){if(o.due>asOf)break;const c=S.done[o.id];const x=b[o.task.prog]||(b[o.task.prog]={d:0,p:0});
+    if(c&&Date.parse(c.at)<end){if(c.result==='na')continue;x.d++;x.p+=PTS[c.result]}else x.d++}
+  const progs={};let sum=0,n=0;for(const p in b)if(b[p].d){progs[p]=Math.round(b[p].p/b[p].d*100);sum+=b[p].p/b[p].d;n++}
+  return {score:n?Math.round(sum/n*100):null,progs};
+}
+function bucket(eids,keyFn,asOf){
+  asOf=asOf||SCH.today;const end=addDays(asOf,1).getTime();const b={};
+  for(const eid of eids)for(const o of OCCE[eid]||[]){if(o.due>asOf)break;const k=keyFn(o.task);if(k==null)continue;const c=S.done[o.id];const x=b[k]||(b[k]={d:0,p:0});
+    if(c&&Date.parse(c.at)<end){if(c.result==='na')continue;x.d++;x.p+=PTS[c.result]}else x.d++}
+  const out={};for(const k in b)out[k]=b[k].d?Math.round(b[k].p/b[k].d*100):null;return out;
+}
+function avg(arr){const v=arr.filter(x=>x!=null);return v.length?Math.round(v.reduce((a,b)=>a+b,0)/v.length):null}
+function escalations(eids){
+  const out=[];const today=SCH.today;
+  for(const eid of eids){const e=ent(eid);if(!e)continue;for(const t of tasksFor(e)){const ser=SERIES[eid+':'+t.id];if(!ser)continue;
+    let k=-1;for(let j=ser.length-1;j>=0;j--)if(ser[j].due<today){k=j;break}
+    if(k<1)continue;const a=ser[k],b=ser[k-1];if(S.done[a.id]||S.done[b.id])continue;
+    const key=eid+':'+t.id;const ack=S.acks[key];if(ack&&ack.upTo>=isoDay(a.due))continue;
+    let n=0;for(let j=k;j>=0&&!S.done[ser[j].id];j--)n++;
+    out.push({key,eid,task:t,last:a,streak:n})}}
+  return out.sort((x,y)=>y.streak-x.streak);
+}
+const risksOf=eids=>S.risks.filter(r=>eids.includes(r.eid));
+const isOpen=r=>r.status==='open'||r.status==='progress';
+function entStats(e){
+  const today=SCH.today;const sc=entScore(e.id);const ws=startOfWeek(today),we=addDays(ws,7);
+  const wk=(OCCE[e.id]||[]).filter(o=>o.due>=ws&&o.due<we&&(o.task.freq!=='daily'||o.due<=today));
+  const wkDone=wk.filter(o=>S.done[o.id]).length;
+  const od=overdueOf(e.id).length;const esc=escalations([e.id]).length;
+  const op=risksOf([e.id]).filter(isOpen);const hi=op.filter(r=>r.l*r.i>=6).length;const crit=op.some(r=>r.l*r.i>=9);
+  let last=0;for(const o of OCCE[e.id]||[]){const c=S.done[o.id];if(c){const t=Date.parse(c.at);if(t>last)last=t}}
+  const s=sc.score;
+  const status=(esc>0||crit||(s!=null&&s<70))?'red':(od>3||hi>0||(s!=null&&s<85))?'amber':'green';
+  return {e,score:s,progs:sc.progs,wk:wk.length?Math.round(wkDone/wk.length*100):null,od,esc,open:op.length,hi,last,status};
+}
+function practiceMonths(eids){let n=0,total=0;
+  for(let m=0;m<12;m++){const ms=addMonths(SCH.ys,m),me=addMonths(SCH.ys,m+1);if(addDays(me,7)>SCH.today)break;total++;
+    let d=0,c=0;const lim=addDays(me,7).getTime();
+    for(const eid of eids)for(const o of OCCE[eid]||[]){if(o.due<ms)continue;if(o.due>=me)break;d++;const x=S.done[o.id];if(x&&Date.parse(x.at)<=lim)c++}
+    if(d&&c/d>=.8)n++}
+  return {n,total}}
+function trend(eids){const pts=[];for(let k=11;k>=0;k--){const d=addDays(SCH.today,-7*k);if(d<addDays(SCH.ys,7))continue;const s=avg(eids.map(id=>entScore(id,d).score));if(s!=null)pts.push({d,s})}return pts}
+const cls=v=>v==null?'':v>=85?'':v>=65?'mid':'lowv';
+const scopeEids=()=>{const r=S.ui.region;return r==='all'?ents().map(e=>e.id):S.locations.filter(l=>l.region===r).map(l=>l.id)};
+const regions=()=>[...new Set(S.locations.map(l=>l.region).filter(Boolean))].sort();
+
+/* ===================== Rendering ===================== */
+function render(){
+  if(!S){renderOnboard();return}
+  buildSchedule();
+  if(!ent(S.ui.loc))S.ui.loc=S.locations[0]?S.locations[0].id:'corp';
+  const exec=S.ui.role==='exec';
+  const escN=exec?escalations(ents().map(e=>e.id)).length:0;
+  $('#nav').style.display='';$('#top').style.display='';
+  const tabs=exec?[['dash','Dashboard'],['risks','Risks'],['reports','Reports'],['tasks','Shared tasks'],['settings','Settings']]:[['tasks','Rounds'],['risks','Risks'],['dash','Dashboard'],['reports','Reports'],['settings','Settings']];
+  $('#nav').innerHTML='<div class="brand"><div class="brand-mark">'+ICON.logo+APP+'</div></div>'+tabs.map(([k,l])=>'<button data-act="tab" data-id="'+k+'"'+(S.ui.tab===k?' aria-current="page"':'')+'>'+ICON[k]+'<span>'+l+'</span>'+(k==='dash'&&escN?'<span class="count" aria-label="'+escN+' escalations">'+escN+'</span>':'')+'</button>').join('');
+  let ctx='';
+  if(!exec)ctx='<select data-change="loc" aria-label="Location">'+S.locations.map(l=>'<option value="'+l.id+'"'+(l.id===S.ui.loc?' selected':'')+'>'+esc(l.name)+'</option>').join('')+'</select>';
+  else if(S.ui.tab==='dash'&&!S.ui.drill&&regions().length)ctx='<select data-change="region" aria-label="Region"><option value="all">All regions</option>'+regions().map(r=>'<option'+(r===S.ui.region?' selected':'')+'>'+esc(r)+'</option>').join('')+'</select>';
+  else if(S.ui.tab==='risks')ctx='<select data-change="rloc" aria-label="Location"><option value="all">All locations</option>'+ents().map(e=>'<option value="'+e.id+'"'+(e.id===S.ui.rloc?' selected':'')+'>'+esc(e.name)+'</option>').join('')+'</select>';
+  $('#top').innerHTML='<div class="who"><strong>'+esc(S.org.name)+'</strong><span>'+(exec?S.locations.length+' locations, program year to '+fmtY(addDays(SCH.ye,-1)):'Site manager view')+'</span></div><div class="ctx">'+ctx+'</div><div class="role" role="group" aria-label="View as"><button data-act="role" data-id="manager" aria-pressed="'+(!exec)+'">Site</button><button data-act="role" data-id="exec" aria-pressed="'+exec+'">Executive</button></div>';
+  const v=$('#view');const eid=exec?'corp':S.ui.loc;
+  if(S.ui.tab==='tasks')v.innerHTML=viewTasks(eid);
+  else if(S.ui.tab==='risks')v.innerHTML=viewRisks();
+  else if(S.ui.tab==='dash')v.innerHTML=exec?(S.ui.drill?viewLocDash(S.ui.drill,true):viewOrgDash()):viewLocDash(eid,false);
+  else if(S.ui.tab==='reports')v.innerHTML=viewReports();
+  else v.innerHTML=viewSettings();
+}
+function weeklyMinutes(){const site=LIB.filter(t=>t.scope!=='org').reduce((a,t)=>a+t.min*PER_YEAR[t.freq],0);return Math.round(site/52)}
+function renderOnboard(){
+  $('#nav').style.display='none';$('#top').style.display='none';
+  $('#view').innerHTML=`<div class="onboard">
+  <div class="brand-mark">${ICON.logo}${APP}</div>
+  <h1>Know every site did its rounds, without driving to every site.</h1>
+  <p class="lead">Site managers finish short photo-backed rounds on their phone. Leadership sees a live readiness score for every location, with alerts when a site falls behind.</p>
+  <div class="facts"><div><b>3 min</b>weekly physical security round with photo proof</div><div><b>4 programs</b>physical, open/close, OSHA, and HIPAA</div><div><b>2 misses</b>in a row triggers an executive alert</div></div>
+  <div class="panel">
+    <div class="field"><label for="ob-org">Organization name</label><input type="text" id="ob-org" placeholder="e.g. Coastal Physical Therapy" autocomplete="organization"></div>
+    <div class="row2"><div class="field"><label for="ob-exec">Your name</label><input type="text" id="ob-exec" placeholder="Operations or compliance lead"></div><div class="field"><label for="ob-it">IT or shared services (optional)</label><input type="text" id="ob-it" placeholder="Handles org-wide IT checks"></div></div>
+    <div class="row2"><div class="field"><label for="ob-loc">First location</label><input type="text" id="ob-loc" placeholder="e.g. Main Street"></div><div class="field"><label for="ob-mgr">Site manager</label><input type="text" id="ob-mgr" placeholder="Name"></div></div>
+    <div class="field"><label for="ob-start">Program start</label><input type="date" id="ob-start" value="${isoDay(new Date())}"><span class="hint">Add more locations and choose programs in Settings.</span></div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:6px"><button class="btn primary" data-act="start">Start</button><button class="btn" data-act="demo">Explore a 12-location demo</button></div>
+  </div>
+  <p class="muted" style="font-size:.85rem;margin-top:16px">${APP} supports your compliance and safety programs. It doesn’t replace legal advice.</p></div>`;
+}
+
+/* ---------- Rounds (tasks) ---------- */
+function markFor(c){if(!c)return '<span class="mark"></span>';const m={pass:['pass',ICON.check],partial:['partial',ICON.half],fail:['fail',ICON.x],na:['na','N/A']}[c.result];return '<span class="mark '+m[0]+'" aria-label="'+RES[c.result]+'">'+m[1]+'</span>'}
+function itemRow(o,showLoc){
+  const c=S.done[o.id];const late=!c&&o.due<SCH.today&&!sup(o);const t=o.task;
+  return `<button class="item" data-act="open-task" data-id="${o.id}">${markFor(c)}<span class="body"><span class="title">${esc(t.title)}</span><span class="meta">${showLoc?'<span>'+esc(ent(o.eid).name)+'</span>':''}<span>${t.min} min</span><span>${PROGS[t.prog]}</span><span>${c?'Done '+fmt(c.at):'Due '+fmt(o.due)}</span><span>${esc(c?c.by:assignee(o.eid,t))}</span></span></span><span class="side">${late?'<span class="badge overdue">Overdue</span>':c?'<span class="badge '+c.result+'">'+RES[c.result]+'</span>':''}</span></button>`;
+}
+function escBanner(eid){const es=escalations([eid]);if(!es.length)return '';
+  return `<div class="alert" role="alert">${ICON.bell}<p><b>Leadership has been alerted.</b> ${es.length===1?esc(es[0].task.title)+' was':es.length+' checks were'} missed ${es.length===1?es[0].streak:'2 or more'} times in a row. Completing the next one clears the alert.</p></div>`}
+function viewTasks(eid){
+  const e=ent(eid);const today=SCH.today;const ws=startOfWeek(today),we=addDays(ws,7);
+  const all=OCCE[eid]||[];
+  let daily=all.filter(o=>o.task.freq==='daily'&&+o.due===+today);let dayLabel='Today';
+  if(!daily.length){const prev=all.filter(o=>o.task.freq==='daily'&&o.due<today);if(prev.length){const d=prev[prev.length-1].due;daily=prev.filter(o=>+o.due===+d);dayLabel='Last business day, '+d.toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric'})}}
+  const late=overdueOf(eid).filter(o=>o.due<ws);
+  const week=all.filter(o=>o.task.freq!=='daily'&&o.due>=ws&&o.due<we);
+  const round=[...late,...week];
+  const doneN=round.filter(o=>S.done[o.id]).length,total=round.length;
+  const mins=round.filter(o=>!S.done[o.id]).reduce((a,o)=>a+o.task.min,0);
+  const Cc=2*Math.PI*54,pct=total?doneN/total:1;
+  const copy=total===0?'Nothing scheduled this week.':doneN===total?'Done for the week. The next round starts Monday.':'About '+mins+' minutes left'+(late.length?', including '+late.length+' carried over.':'.');
+  const todayHTML=e.corp?'':(daily.length?`<h2 style="margin-bottom:10px">${dayLabel}</h2><div class="today">${daily.map(o=>{const c=S.done[o.id];const st=!c?'':c.result==='pass'?'done':'flag';return `<button class="tcard ${st}" data-act="open-task" data-id="${o.id}"><b>${esc(o.task.title)}</b><span class="muted" style="font-size:.88rem">${c?(c.result==='pass'?'Done at ':'Done with exceptions at ')+new Date(c.at).toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit'}):o.task.items.length+' items, about '+o.task.min+' min'}</span></button>`}).join('')}</div>`:'');
+  const seg=S.ui.seg;let list='';
+  if(seg==='week')list=round.length?'<div class="list">'+round.sort((a,b)=>(!!S.done[a.id]-!!S.done[b.id])||(a.due-b.due)).map(o=>itemRow(o)).join('')+'</div>':'<div class="empty">No checks due this week.</div>';
+  else if(seg==='upcoming'){const up=all.filter(o=>o.task.freq!=='daily'&&o.due>=we&&o.due<addDays(we,42)&&!S.done[o.id]);const g={};up.forEach(o=>{const k=isoDay(startOfWeek(o.due));(g[k]=g[k]||[]).push(o)});
+    list=up.length?Object.keys(g).map(k=>'<div class="group-label">Week of '+fmt(parseDay(k))+'</div><div class="list">'+g[k].map(o=>itemRow(o)).join('')+'</div>').join(''):'<div class="empty">Nothing in the next 6 weeks.</div>'}
+  else{const d=all.filter(o=>S.done[o.id]).sort((a,b)=>Date.parse(S.done[b.id].at)-Date.parse(S.done[a.id].at)).slice(0,60);list=d.length?'<div class="list">'+d.map(o=>itemRow(o)).join('')+'</div>':'<div class="empty">Completed checks collect here as your audit trail.</div>'}
+  return `${escBanner(eid)}${e.corp?'<p class="muted" style="margin-bottom:16px;max-width:60ch">Organization-wide checks handled once for every location, such as BAAs, policies, MFA, and backups.</p>':''}${todayHTML}
+  <section class="round"><div class="ring" aria-label="${doneN} of ${total} done this week"><svg viewBox="0 0 120 120"><circle class="track" cx="60" cy="60" r="54" fill="none" stroke-width="12"/><circle class="fill" cx="60" cy="60" r="54" fill="none" stroke-width="12" stroke-linecap="round" stroke-dasharray="${Cc}" stroke-dashoffset="${Cc*(1-pct)}"/></svg><div class="center"><b class="num">${doneN}/${total}</b><span>done</span></div></div>
+  <div class="copy"><h1>This week’s round</h1><p class="muted">${esc(e.name)}, ${fmt(ws)} to ${fmt(addDays(we,-1))}. ${copy}</p></div></section>
+  <div class="seg" role="group" aria-label="Task list"><button data-act="seg" data-id="week" aria-pressed="${seg==='week'}">This week</button><button data-act="seg" data-id="upcoming" aria-pressed="${seg==='upcoming'}">Upcoming</button><button data-act="seg" data-id="done" aria-pressed="${seg==='done'}">Completed</button></div>${list}`;
+}
+
+/* ---------- Task sheets ---------- */
+let DRAFT=null,PHOTO_FOR=null;
+function openTask(id){
+  const o=OMAP[id];if(!o)return;const t=o.task;const c=S.done[id];const e=ent(o.eid);
+  const ppl=people(o.eid);
+  DRAFT={id,kind:t.kind,note:c?c.note||'':'',by:c?c.by:assignee(o.eid,t),ev:c&&c.ev?[...c.ev]:[]};
+  if(!ppl.includes(DRAFT.by))ppl.push(DRAFT.by);
+  const head=`<div class="sheet-head"><div><h2>${esc(t.title)}</h2><p class="muted" style="font-size:.9rem;margin-top:4px">${esc(e.name)}, ${FREQ[t.freq].toLowerCase()}, due ${fmtY(o.due)}</p></div><button class="icon-btn" data-act="close" aria-label="Close">${ICON.close}</button></div>`;
+  const chips=t.kind==='check'?`<div class="chips"><span class="chip">${esc(t.cite)}</span>${t.csf?'<span class="chip">NIST CSF '+t.csf+' '+CSF[t.csf.slice(0,2)]+'</span>':''}${t.hicp?'<span class="chip">405(d) HICP '+t.hicp+': '+HICP[t.hicp]+'</span>':''}<span class="chip">${PROGS[t.prog]}</span></div>`:`<div class="chips">${t.csf?'<span class="chip">NIST CSF '+t.csf+'</span>':''}<span class="chip">${PROGS[t.prog]}</span></div>`;
+  let body;
+  if(t.kind==='round'){
+    DRAFT.ans=c&&c.ans?[...c.ans]:t.items.map(()=>null);DRAFT.vals=c&&c.vals?[...c.vals]:t.items.map(()=>null);
+    const iev=c&&c.iev?JSON.parse(JSON.stringify(c.iev)):{};DRAFT.iev=iev;
+    body=`${chips}<div class="why">${esc(t.why)}</div>
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><h3>${t.items.length} items</h3><button class="btn small" data-act="all-yes">Mark all yes</button></div>
+    <div id="items">${t.items.map((it,i)=>`<div class="qi"><div class="q">${esc(it.q)}</div><div class="sub"><span>${esc(it.cite)}</span>${it.num?'<span>Acceptable range '+it.num.min+' to '+it.num.max+it.num.unit+'</span>':''}${it.photo?'<span class="need-photo" id="np-'+i+'">Photo required</span>':''}</div>
+      ${it.num?`<div class="yn num" role="group" aria-label="${esc(it.q)}"><div class="numin"><input type="number" inputmode="decimal" step="0.1" data-num="${i}" value="${DRAFT.vals[i]==null?'':DRAFT.vals[i]}" aria-label="${esc(it.q)} in ${it.num.unit}"><span>${it.num.unit}</span></div><button data-act="ans" data-i="${i}" data-v="na" aria-pressed="${DRAFT.ans[i]==='na'}">N/A</button><button class="cam" data-act="item-photo" data-i="${i}" aria-label="Add photo for this item">${ICON.cam}</button></div><div class="numstat" id="ns-${i}"></div>`:`<div class="yn" role="group" aria-label="${esc(it.q)}">${[['y','Yes'],['n','No'],['na','N/A']].map(([v,l])=>`<button data-act="ans" data-i="${i}" data-v="${v}" aria-pressed="${DRAFT.ans[i]===v}">${l}</button>`).join('')}<button class="cam" data-act="item-photo" data-i="${i}" aria-label="Add photo for this item">${ICON.cam}</button></div>`}<div class="thumbs" id="th-${i}"></div></div>`).join('')}</div>
+    <div id="risk-flag"></div>`;
+  }else{
+    DRAFT.steps=c&&c.steps?[...c.steps]:t.steps.map(()=>false);DRAFT.result=c?c.result:null;
+    body=`${chips}<div class="why">${esc(t.why)}</div>
+    <h3 style="margin-bottom:8px">Steps</h3><ul class="steps">${t.steps.map((s,i)=>`<li><label><input type="checkbox" data-step="${i}" ${DRAFT.steps[i]?'checked':''}><span>${esc(s)}</span></label></li>`).join('')}</ul>
+    <h3>Result</h3><div class="results" role="group" aria-label="Result">${[['pass','Passed'],['partial','Partly'],['fail','Not met'],['na','N/A']].map(([k,l])=>`<button data-act="result" data-r="${k}" aria-pressed="${DRAFT.result===k}">${l}</button>`).join('')}</div>
+    <div id="risk-flag"></div>
+    <div class="field"><label>Evidence</label><span class="hint">Suggested: ${esc(t.ev)}</span><div class="thumbs" id="thumbs"></div><div><button class="btn small" data-act="add-photo" style="margin-top:8px">${ICON.cam.replace('<svg','<svg width="18" height="18"')} Add photo</button></div></div>`;
+  }
+  body+=`<div class="field" style="margin-top:14px"><label for="t-note">Notes</label><textarea id="t-note" placeholder="Anything leadership should know">${esc(DRAFT.note)}</textarea></div>
+    <div class="row2"><div class="field"><label for="t-by">Done by</label><select id="t-by">${ppl.map(p=>`<option ${p===DRAFT.by?'selected':''}>${esc(p)}</option>`).join('')}</select></div>
+    <div class="field"><label for="t-assign">Assigned for future rounds</label><select id="t-assign">${people(o.eid).map(p=>`<option ${p===assignee(o.eid,t)?'selected':''}>${esc(p)}</option>`).join('')}</select></div></div>
+    ${c?`<p class="stamp">Recorded ${fmtT(c.at)} by ${esc(c.by)}. Photos are time-stamped when taken.</p>`:''}`;
+  $('#sheet-body').innerHTML=head+'<div class="sheet-body">'+body+'</div><div class="sheet-foot">'+(c?'<button class="btn ghost danger" data-act="undo-task">Clear result</button>':'')+'<button class="btn" data-act="close">Cancel</button><button class="btn primary" data-act="save-task">Save</button></div>';
+  refreshDraftUI();openSheet();
+}
+function draftResult(){
+  if(DRAFT.kind==='check')return DRAFT.result;
+  if(DRAFT.ans.some(a=>!a))return null;const m=DRAFT.ans.filter(a=>a!=='na').length;const f=DRAFT.ans.filter(a=>a==='n').length;
+  return m===0?'na':f===0?'pass':f/m>=.5?'fail':'partial';
+}
+function refreshDraftUI(){
+  const o=OMAP[DRAFT.id];const t=o.task;const box=$('#risk-flag');
+  if(DRAFT.kind==='round'){
+    t.items.forEach((it,i)=>{if(it.num){const ns=$('#ns-'+i);if(ns){const v=DRAFT.vals[i];ns.textContent=v==null?'':DRAFT.ans[i]==='y'?'In range':'Out of range. Note what you did and follow your storage protocol.';ns.style.color=DRAFT.ans[i]==='y'?'var(--pass)':'var(--fail)'}}renderThumbBox($('#th-'+i),(DRAFT.iev[i]||[]),i);const np=$('#np-'+i);if(np)np.style.visibility=(DRAFT.iev[i]||[]).length?'hidden':'visible'});
+    const nos=DRAFT.ans.filter(a=>a==='n').length;
+    box.innerHTML=nos&&!t.noRisk?'<div class="note-flag">Each “No” is added to the risk plan and shows on the leadership dashboard.</div>':nos?'<div class="note-flag">Exceptions show on the site and leadership dashboards. Add a note on what you did about it.</div>':'';
+  }else{
+    renderThumbBox($('#thumbs'),DRAFT.ev,null);
+    const r=DRAFT.result;box.innerHTML=(r==='fail'||r==='partial')&&!S.risks.some(x=>x.occId===DRAFT.id)?'<div class="note-flag">Saving adds this gap to the risk plan so it gets fixed and shows on leadership’s report.</div>':'';
+  }
+}
+async function renderThumbBox(box,ids,idx){if(!box)return;box.innerHTML='';for(const id of ids){const r=await idb.get(id);if(!r)continue;const d=document.createElement('div');d.className='thumb';d.innerHTML='<img alt="Evidence photo"><button data-act="del-photo" data-id="'+id+'" data-i="'+(idx==null?'':idx)+'" aria-label="Remove photo">×</button>';d.querySelector('img').src=r.data;box.appendChild(d)}}
+function readFile(f){return new Promise((res,rej)=>{const fr=new FileReader();fr.onload=()=>res(fr.result);fr.onerror=rej;fr.readAsDataURL(f)})}
+function compress(u){return new Promise(res=>{const img=new Image();img.onload=()=>{const s=Math.min(1,1280/Math.max(img.width,img.height));const c=document.createElement('canvas');c.width=Math.round(img.width*s);c.height=Math.round(img.height*s);const g=c.getContext('2d');g.drawImage(img,0,0,c.width,c.height);const stamp=new Date().toLocaleString();g.font='bold '+Math.max(14,Math.round(c.width/45))+'px sans-serif';const w=g.measureText(stamp).width;g.fillStyle='rgba(0,0,0,.55)';g.fillRect(c.width-w-20,c.height-Math.round(c.width/45)-18,w+20,Math.round(c.width/45)+18);g.fillStyle='#fff';g.fillText(stamp,c.width-w-10,c.height-10);try{res(c.toDataURL('image/jpeg',.72))}catch(e){res(u)}};img.onerror=()=>res(u);img.src=u})}
+$('#photo-input').addEventListener('change',async e=>{const f=e.target.files[0];e.target.value='';if(!f||!DRAFT)return;
+  try{const data=await compress(await readFile(f));const id=uid();await idb.put({id,occId:DRAFT.id,data,at:new Date().toISOString()});
+    if(PHOTO_FOR==null)DRAFT.ev.push(id);else{(DRAFT.iev[PHOTO_FOR]=DRAFT.iev[PHOTO_FOR]||[]).push(id)}refreshDraftUI()}
+  catch(err){toast('That photo couldn’t be added. Try a JPG or PNG.')}});
+function saveTask(){
+  const o=OMAP[DRAFT.id];const t=o.task;const result=draftResult();
+  if(!result){toast(DRAFT.kind==='round'?'Answer every item first.':'Choose a result first.');return}
+  if(DRAFT.kind==='round'&&!S.done[DRAFT.id]){const miss=t.items.findIndex((it,i)=>it.photo&&DRAFT.ans[i]==='y'&&!(DRAFT.iev[i]||[]).length);if(miss>=0){toast('Add a photo for: '+t.items[miss].q);return}}
+  DRAFT.note=$('#t-note').value.trim();DRAFT.by=$('#t-by').value;const asg=$('#t-assign').value;if(asg)S.assign[o.eid+':'+t.id]=asg;
+  const prev=S.done[DRAFT.id];
+  const rec={result,by:DRAFT.by,at:prev?prev.at:new Date().toISOString()};
+  if(!prev||prev.result!==result)rec.at=new Date().toISOString();
+  if(DRAFT.note)rec.note=DRAFT.note;
+  if(DRAFT.kind==='round'){rec.ans=DRAFT.ans;if(DRAFT.vals&&DRAFT.vals.some(v=>v!=null))rec.vals=DRAFT.vals;if(Object.keys(DRAFT.iev).length)rec.iev=DRAFT.iev}else{rec.steps=DRAFT.steps;if(DRAFT.ev.length)rec.ev=DRAFT.ev}
+  S.done[DRAFT.id]=rec;
+  let added=0;
+  if(!t.noRisk){
+    if(DRAFT.kind==='round')DRAFT.ans.forEach((a,i)=>{const key=DRAFT.id+'#'+i;if(a==='n'&&!S.risks.some(r=>r.occId===key)){S.risks.push(riskFromItem(o,i,DRAFT.note,new Date()));added++}});
+    else if((result==='fail'||result==='partial')&&!S.risks.some(r=>r.occId===DRAFT.id)){S.risks.push(riskFrom(o,result,DRAFT.note,new Date()));added++}
+  }
+  save();closeSheet();render();toast(added?'Saved. Added '+added+' item'+(added>1?'s':'')+' to the risk plan.':'Saved.');
+}
+function riskFrom(o,result,note,when){const t=o.task;const l=result==='fail'?t.l:Math.max(1,t.l-1);
+  return {id:uid(),eid:o.eid,title:t.title,taskId:t.id,occId:o.id,cite:t.cite,threat:t.threat,finding:note||'',l,i:t.i,status:'open',owner:assignee(o.eid,t),due:isoDay(addDays(when,dueDaysFor(l*t.i))),plan:'',created:new Date(when).toISOString(),closed:null}}
+function riskFromItem(o,i,note,when){const t=o.task,it=t.items[i];
+  return {id:uid(),eid:o.eid,title:'Not met: '+it.q,taskId:t.id,occId:o.id+'#'+i,cite:it.cite,threat:t.threat,finding:note||'',l:t.l,i:t.i,status:'open',owner:assignee(o.eid,t),due:isoDay(addDays(when,dueDaysFor(t.l*t.i))),plan:'',created:new Date(when).toISOString(),closed:null}}
+
+/* ---------- Risks & incidents ---------- */
+function heatHTML(list){const cnt=(l,i)=>list.filter(r=>r.l===l&&r.i===i).length;
+  let h='<div class="heat" aria-label="Open risks by likelihood and impact"><div></div><div class="lbl">Low impact</div><div class="lbl">Medium</div><div class="lbl">High impact</div>';
+  for(const l of [3,2,1]){h+='<div class="lbl">'+LVL[l]+' likelihood</div>';for(const i of [1,2,3]){const n=cnt(l,i);h+='<div class="c h'+rate(l,i)[2]+'v">'+(n||'')+'</div>'}}return h+'</div>'}
+function riskEids(){if(S.ui.role!=='exec')return [S.ui.loc];return S.ui.rloc==='all'?ents().map(e=>e.id):[S.ui.rloc]}
+function riskRow(r,showLoc){const [lab,c]=rate(r.l,r.i);const late=isOpen(r)&&parseDay(r.due)<SCH.today;const e=ent(r.eid);
+  return `<button class="item" data-act="open-risk" data-id="${r.id}"><span class="body"><span class="title">${esc(r.title)}</span><span class="meta">${showLoc&&e?'<span>'+esc(e.name)+'</span>':''}<span>${esc(r.owner)}</span><span>${r.status==='mitigated'?'Fixed '+fmt(r.closed):r.status==='accepted'?'Accepted':'Target '+fmt(parseDay(r.due))}</span></span></span><span class="side">${late?'<span class="badge overdue">Past target</span>':''}<span class="badge ${c}">${lab}</span></span></button>`}
+function viewRisks(){
+  const exec=S.ui.role==='exec';const eids=riskEids();const showLoc=exec&&eids.length>1;const rs=S.ui.rseg;
+  const seg=`<div class="seg" role="group" aria-label="Risk views" style="margin-top:0"><button data-act="rseg" data-id="risks" aria-pressed="${rs==='risks'}">Risk plan</button><button data-act="rseg" data-id="incidents" aria-pressed="${rs==='incidents'}">Incident log</button></div>`;
+  if(rs==='incidents'){const inc=S.incidents.filter(x=>eids.includes(x.eid)).sort((a,b)=>b.discovered.localeCompare(a.discovered));
+    return seg+`<div style="display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap;margin-bottom:14px"><div><h1>Incident log</h1><p class="muted" style="max-width:56ch;margin-top:6px">Log anything that might involve PHI or a workplace injury the same day. The 60-day breach notice clock is tracked for you.</p></div><button class="btn primary" data-act="new-incident">Log an incident</button></div>`+
+    (inc.length?'<div class="list">'+inc.map(x=>{const left=Math.ceil((addDays(parseDay(x.discovered),60)-SCH.today)/DAY);const open=x.status==='investigating';const e=ent(x.eid);
+      return `<button class="item" data-act="open-incident" data-id="${x.id}"><span class="body"><span class="title">${esc(x.title)}</span><span class="meta">${showLoc&&e?'<span>'+esc(e.name)+'</span>':''}<span>Found ${fmt(parseDay(x.discovered))}</span><span>${x.count?esc(x.count)+' people':'Count unknown'}</span><span>${{investigating:'Investigating',notbreach:'Not a breach',notified:'Notices sent',closed:'Closed'}[x.status]}</span></span></span><span class="side">${open?`<span class="badge ${left<=14?'high':'med'}">${left>=0?left+' days left':'Past 60 days'}</span>`:''}</span></button>`}).join('')+'</div>':'<div class="empty">No incidents logged.</div>')}
+  const all=risksOf(eids);const open=all.filter(isOpen).sort((a,b)=>b.l*b.i-a.l*a.i);const closed=all.filter(r=>!isOpen(r));
+  return seg+`<div style="display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap"><div><h1>Risk plan</h1><p class="muted" style="max-width:58ch;margin-top:6px">Every “No” or unmet check lands here with a rating, an owner, and a target date. Together this is your HIPAA risk management plan and corrective action log.</p></div><button class="btn" data-act="new-risk">Add a risk</button></div>
+  <div class="grid2" style="margin-top:22px"><div>${heatHTML(open)}</div><div class="stats" style="margin-top:0;--cols:2;grid-template-columns:repeat(2,1fr)"><div class="stat"><b class="num">${open.length}</b><span>Open</span></div><div class="stat"><b class="num">${open.filter(r=>r.l*r.i>=6).length}</b><span>High or critical</span></div><div class="stat"><b class="num">${all.filter(r=>r.status==='mitigated').length}</b><span>Fixed</span></div><div class="stat"><b class="num">${open.filter(r=>parseDay(r.due)<SCH.today).length}</b><span>Past target date</span></div></div></div>
+  <div class="section"><h2>Open</h2>${open.length?'<div class="list">'+open.map(r=>riskRow(r,showLoc)).join('')+'</div>':'<div class="empty">No open risks.</div>'}</div>
+  ${closed.length?'<div class="section"><h2>Resolved</h2><div class="list">'+closed.slice(0,40).map(r=>riskRow(r,showLoc)).join('')+'</div></div>':''}`;
+}
+function openRisk(id){
+  const defEid=S.ui.role==='exec'?(S.ui.rloc==='all'?'corp':S.ui.rloc):S.ui.loc;
+  const r=id?S.risks.find(x=>x.id===id):{id:null,eid:defEid,title:'',threat:'',finding:'',l:2,i:2,status:'open',owner:ent(defEid).manager,due:isoDay(addDays(new Date(),60)),plan:''};
+  if(!r)return;const e=ent(r.eid);const opt=(v,cur,lab)=>`<option value="${esc(v)}" ${String(v)===String(cur)?'selected':''}>${esc(lab)}</option>`;
+  $('#sheet-body').innerHTML=`<div class="sheet-head"><div><h2>${r.id?esc(r.title):'New risk'}</h2><p class="muted" style="font-size:.9rem;margin-top:4px">${e?esc(e.name):''}${r.cite?', '+esc(r.cite):''}</p></div><button class="icon-btn" data-act="close" aria-label="Close">${ICON.close}</button></div>
+  <div class="sheet-body">
+    ${r.id?'':`<div class="field"><label for="r-title">Risk</label><input type="text" id="r-title" placeholder="e.g. Answering service has no BAA"></div><div class="field"><label for="r-eid">Location</label><select id="r-eid">${(S.ui.role==='exec'?ents():[ent(S.ui.loc)]).map(x=>opt(x.id,r.eid,x.name)).join('')}</select></div>`}
+    <div class="field"><label for="r-threat">What could go wrong</label><input type="text" id="r-threat" value="${esc(r.threat)}"></div>
+    <div class="field"><label for="r-finding">What we found</label><textarea id="r-finding">${esc(r.finding)}</textarea></div>
+    <div class="row2"><div class="field"><label for="r-l">Likelihood</label><select id="r-l">${[1,2,3].map(v=>opt(v,r.l,LVL[v])).join('')}</select></div><div class="field"><label for="r-i">Impact</label><select id="r-i">${[1,2,3].map(v=>opt(v,r.i,LVL[v])).join('')}</select></div></div>
+    <div class="field"><label for="r-plan">Fix plan</label><textarea id="r-plan" placeholder="What will be done, and by whom">${esc(r.plan)}</textarea></div>
+    <div class="row2"><div class="field"><label for="r-owner">Owner</label><select id="r-owner">${people(r.eid).map(p=>opt(p,r.owner,p)).join('')}</select></div><div class="field"><label for="r-due">Target date</label><input type="date" id="r-due" value="${r.due}"></div></div>
+    <div class="field"><label for="r-status">Status</label><select id="r-status">${opt('open',r.status,'Open')}${opt('progress',r.status,'In progress')}${opt('mitigated',r.status,'Fixed')}${opt('accepted',r.status,'Accepted by leadership')}</select><span class="hint">Accepting a risk means leadership chose not to fix it. Record the reason in the fix plan.</span></div>
+  </div>
+  <div class="sheet-foot">${r.id?'<button class="btn ghost danger" data-act="del-risk" data-id="'+r.id+'">Delete</button>':''}<button class="btn" data-act="close">Cancel</button><button class="btn primary" data-act="save-risk" data-id="${r.id||''}">Save risk</button></div>`;
+  openSheet();
+}
+function saveRisk(id){
+  let r=id?S.risks.find(x=>x.id===id):null;
+  if(!r){const title=$('#r-title').value.trim();if(!title){toast('Name the risk first.');return}r={id:uid(),eid:$('#r-eid').value,title,taskId:'',occId:'',created:new Date().toISOString(),closed:null};S.risks.push(r)}
+  const st=$('#r-status').value;if(st==='accepted'&&!$('#r-plan').value.trim()){toast('Add the reason for accepting this risk.');return}
+  Object.assign(r,{threat:$('#r-threat').value.trim(),finding:$('#r-finding').value.trim(),l:+$('#r-l').value,i:+$('#r-i').value,plan:$('#r-plan').value.trim(),owner:$('#r-owner').value,due:$('#r-due').value||isoDay(new Date())});
+  if((st==='mitigated'||st==='accepted')&&isOpen(r))r.closed=new Date().toISOString();if(st==='open'||st==='progress')r.closed=null;
+  r.status=st;save();closeSheet();render();toast('Risk saved.');
+}
+function incidentGuide(d0,count){if(!d0)return '';const d=parseDay(d0);const dl=addDays(d,60);const n=+count||0;
+  let g='If this is a breach of unsecured PHI, notify affected patients without unreasonable delay and no later than '+fmtY(dl)+'. ';
+  g+=n>=500?'With 500 or more affected, also notify HHS by that date, and prominent media if 500 or more live in one state.':'Under 500 people: report to HHS within 60 days after the end of '+d.getFullYear()+' (by '+fmtY(addDays(new Date(d.getFullYear(),11,31),60))+').';
+  return g+' For a workplace injury, OSHA requires reporting a hospitalization, amputation, or eye loss within 24 hours and a fatality within 8. Call legal counsel or your insurer before sending notices.'}
+function openIncident(id){
+  const defEid=S.ui.role==='exec'?(S.ui.rloc==='all'?'corp':S.ui.rloc):S.ui.loc;
+  const x=id?S.incidents.find(i=>i.id===id):{id:null,eid:defEid,kind:'privacy',title:'',discovered:isoDay(new Date()),description:'',phi:'unsure',count:'',status:'investigating',actions:''};
+  if(!x)return;const opt=(v,cur,lab)=>`<option value="${esc(v)}" ${v===cur?'selected':''}>${esc(lab)}</option>`;
+  $('#sheet-body').innerHTML=`<div class="sheet-head"><h2>${x.id?esc(x.title):'Log an incident'}</h2><button class="icon-btn" data-act="close" aria-label="Close">${ICON.close}</button></div>
+  <div class="sheet-body">
+    <div class="field"><label for="i-title">What happened</label><input type="text" id="i-title" value="${esc(x.title)}" placeholder="e.g. Lab results faxed to the wrong number"></div>
+    <div class="field"><label for="i-kind">Type</label><select id="i-kind">${opt('privacy',x.kind||'privacy','Privacy or security (PHI)')}${opt('injury',x.kind,'Workplace injury or exposure')}${opt('other',x.kind,'Other')}</select></div>
+    <div class="field"><label for="i-eid">Location</label><select id="i-eid">${(S.ui.role==='exec'?ents():[ent(S.ui.loc)]).map(e=>opt(e.id,x.eid,e.name)).join('')}</select></div>
+    <div class="row2"><div class="field"><label for="i-date">Date discovered</label><input type="date" id="i-date" value="${x.discovered}"></div><div class="field"><label for="i-count">People affected</label><input type="number" min="0" id="i-count" value="${esc(x.count)}"></div></div>
+    <div class="field"><label for="i-desc">Details</label><textarea id="i-desc">${esc(x.description)}</textarea></div>
+    <div class="row2"><div class="field"><label for="i-phi">PHI involved?</label><select id="i-phi">${opt('yes',x.phi,'Yes')}${opt('no',x.phi,'No')}${opt('unsure',x.phi,'Not sure yet')}</select></div><div class="field"><label for="i-status">Status</label><select id="i-status">${opt('investigating',x.status,'Investigating')}${opt('notbreach',x.status,'Assessed: not a breach')}${opt('notified',x.status,'Notices sent')}${opt('closed',x.status,'Closed')}</select></div></div>
+    <div class="field"><label for="i-actions">Actions taken</label><textarea id="i-actions" placeholder="Containment, who was told, risk assessment result">${esc(x.actions)}</textarea></div>
+    <div class="why" id="i-guide">${esc(incidentGuide(x.discovered,x.count))}</div>
+  </div>
+  <div class="sheet-foot">${x.id?'<button class="btn ghost danger" data-act="del-incident" data-id="'+x.id+'">Delete</button>':''}<button class="btn" data-act="close">Cancel</button><button class="btn primary" data-act="save-incident" data-id="${x.id||''}">Save incident</button></div>`;
+  const upd=()=>{$('#i-guide').textContent=incidentGuide($('#i-date').value,$('#i-count').value)};$('#i-date').addEventListener('input',upd);$('#i-count').addEventListener('input',upd);
+  openSheet();
+}
+function saveIncident(id){const title=$('#i-title').value.trim();if(!title){toast('Describe what happened first.');return}
+  let x=id?S.incidents.find(i=>i.id===id):null;if(!x){x={id:uid(),created:new Date().toISOString()};S.incidents.push(x)}
+  Object.assign(x,{eid:$('#i-eid').value,kind:$('#i-kind').value,title,discovered:$('#i-date').value||isoDay(new Date()),count:$('#i-count').value,description:$('#i-desc').value.trim(),phi:$('#i-phi').value,status:$('#i-status').value,actions:$('#i-actions').value.trim()});
+  save();closeSheet();render();toast('Incident saved.')}
+
+/* ---------- Dashboards ---------- */
+function barRows(items){return '<div class="bars">'+items.map(([l,v])=>`<div class="bar-row"><span>${esc(l)}</span><div class="bar"><i class="${cls(v)}" style="width:${v==null?0:v}%"></i></div><b class="num" style="text-align:right">${v==null?'–':v+'%'}</b></div>`).join('')+'</div>'}
+function sparkSVG(pts){if(pts.length<2)return '<p class="muted" style="font-size:.9rem">The trend line appears after two weeks of rounds.</p>';
+  const W=320,Hh=90,p=6;const x=i=>p+i*(W-2*p)/(pts.length-1);const y=v=>Hh-p-(v/100)*(Hh-2*p);const line=pts.map((q,i)=>(i?'L':'M')+x(i).toFixed(1)+' '+y(q.s).toFixed(1)).join(' ');
+  return `<svg class="spark" viewBox="0 0 ${W} ${Hh}" preserveAspectRatio="none" role="img" aria-label="Readiness over ${pts.length} weeks, from ${pts[0].s}% to ${pts[pts.length-1].s}%"><path class="ar" d="${line} L${x(pts.length-1)} ${Hh} L${x(0)} ${Hh}Z"/><path class="ln" d="${line}" vector-effect="non-scaling-stroke"/></svg><div style="display:flex;justify-content:space-between;font-size:.8rem" class="muted"><span>${fmt(pts[0].d)}</span><span>Last ${pts.length} weeks</span><span>Today</span></div>`}
+const statusHTML=s=>`<span class="status ${s}"><i></i>${STATUS[s]}</span>`;
+function escList(es,canAck){return '<div class="list">'+es.map(x=>{const e=ent(x.eid);return `<div class="item esc" style="cursor:default"><span class="mark fail">${ICON.x}</span><span class="body"><span class="title">${esc(e.name)}: ${esc(x.task.title)}</span><span class="meta"><span>Missed ${x.streak} in a row</span><span>Last due ${fmt(x.last.due)}</span><span>${esc(assignee(x.eid,x.task))}</span></span></span>${canAck?`<span class="side"><button class="btn small" data-act="ack" data-id="${x.key}" data-due="${isoDay(x.last.due)}">Mark followed up</button></span>`:''}</div>`}).join('')+'</div>'}
+function escGrouped(es){const g={};es.forEach(x=>{(g[x.eid]=g[x.eid]||[]).push(x)});
+  return '<div class="list">'+Object.keys(g).sort((a,b)=>g[b].length-g[a].length).map(eid=>{const e=ent(eid),xs=g[eid];const names=xs.slice(0,3).map(x=>x.task.title).join(', ')+(xs.length>3?', and '+(xs.length-3)+' more':'');
+  return `<div class="item esc" style="cursor:default"><span class="mark fail">${ICON.x}</span><span class="body"><span class="title">${esc(e.name)}: ${xs.length} check${xs.length>1?'s':''} missed 2 or more times in a row</span><span class="meta"><span>${esc(names)}</span><span>${esc(e.manager)}</span></span></span><span class="side"><button class="btn small" data-act="drill" data-id="${eid}">View</button><button class="btn small" data-act="ack-all" data-id="${eid}">Mark followed up</button></span></div>`}).join('')+'</div>'}
+function exceptionsOf(eid){const since=addDays(SCH.today,-7);const out=[];for(const o of OCCE[eid]||[]){if(o.task.kind!=='round'||o.due<since||o.due>SCH.today)continue;const c=S.done[o.id];if(!c||!c.ans)continue;c.ans.forEach((a,i)=>{const it=o.task.items[i];if(a==='n')out.push({o,q:it.num&&c.vals&&c.vals[i]!=null?it.q+': '+c.vals[i]+it.num.unit+' (out of range)':it.q,c})})}return out.reverse()}
+function viewOrgDash(){
+  const eids=scopeEids();const st=eids.map(id=>entStats(ent(id)));
+  const score=avg(st.map(s=>s.score));const es=escalations(eids);
+  const g=st.filter(s=>s.status==='green').length,a=st.filter(s=>s.status==='amber').length,r=st.filter(s=>s.status==='red').length;
+  const op=risksOf(eids).filter(isOpen);const hi=op.filter(x=>x.l*x.i>=6).length;
+  const wk=avg(st.map(s=>s.wk));const last=S.signoffs[S.signoffs.length-1];const pm=practiceMonths(eids);
+  const sorted=[...st].sort((x,y)=>(x.score==null?101:x.score)-(y.score==null?101:y.score));
+  const progAvg=Object.keys(PROGS).filter(p=>S.org.progs.includes(p)).map(p=>[PROGS[p],avg(st.map(s=>s.progs[p]))]);
+  const fw=bucket(eids,t=>CATS[t.cat]?t.cat:null),csf=bucket(eids,t=>t.csf?t.csf.slice(0,2):null);
+  return `<section class="hero"><div><h1 style="font-size:1.1rem;margin-bottom:10px">Readiness across ${S.ui.region==='all'?'all locations':esc(S.ui.region)}</h1><div class="score"><b class="num">${score==null?'–':score}</b>${score==null?'':'<span class="pct">%</span>'}</div>
+  <p class="score-caption muted">${score==null?'Scores appear once the first checks come due.':`The average location has completed and passed ${score}% of checks due this program year. ${wk==null?'':wk+'% of this week’s round is done so far.'}`}</p></div><div>${sparkSVG(trend(eids))}</div></section>
+  <div class="stats" style="--cols:5"><div class="stat"><b class="num" style="color:var(--pass)">${g}</b><span>On track</span></div><div class="stat"><b class="num" style="color:var(--warn)">${a}</b><span>Need attention</span></div><div class="stat"><b class="num" style="color:var(--fail)">${r}</b><span>At risk</span></div><div class="stat"><b class="num" style="color:${es.length?'var(--fail)':'inherit'}">${es.length}</b><span>Escalations</span></div><div class="stat"><b class="num">${hi}</b><span>High or critical risks</span></div></div>
+  ${es.length?`<div class="section"><h2>Escalations</h2><p class="muted" style="margin:-4px 0 12px;font-size:.92rem">A location missed the same check 2 cycles in a row. Site managers see that leadership was alerted.</p>${escGrouped(es)}</div>`:''}
+  <div class="section"><h2>Locations</h2><p class="muted" style="margin:-4px 0 12px;font-size:.92rem">Lowest readiness first. Select a location to see its detail.</p>
+  <div class="tablewrap"><table class="loc"><thead><tr><th>Location</th><th>Manager</th><th>Readiness</th><th>This week</th><th>Overdue</th><th>Escalations</th><th>Open risks</th><th>Status</th><th>Last activity</th></tr></thead><tbody>
+  ${sorted.map(s=>`<tr data-act="drill" data-id="${s.e.id}" tabindex="0"><td class="nm"><b>${esc(s.e.name)}</b><span>${esc(s.e.region||'')}</span></td><td>${esc(s.e.manager)}</td><td><div class="minibar"><div class="bar"><i class="${cls(s.score)}" style="width:${s.score||0}%"></i></div><b class="num">${s.score==null?'–':s.score+'%'}</b></div></td><td class="num">${s.wk==null?'–':s.wk+'%'}</td><td class="num">${s.od}</td><td class="num" style="${s.esc?'color:var(--fail);font-weight:700':''}">${s.esc}</td><td class="num">${s.open}${s.hi?' <span class="badge high">'+s.hi+' high</span>':''}</td><td>${statusHTML(s.status)}</td><td class="muted">${s.last?fmt(s.last):'–'}</td></tr>`).join('')}
+  </tbody></table></div></div>
+  <div class="grid2 section"><div><h2>By program</h2>${barRows(progAvg)}</div><div><h2>Open risks across locations</h2>${heatHTML(op)}</div></div>
+  ${S.org.progs.includes('hipaa')||S.org.progs.includes('phys')?`<div class="grid2 section"><div><h2>HIPAA safeguards</h2>${barRows(Object.keys(CATS).filter(k=>fw[k]!==undefined).map(k=>[CATS[k],fw[k]]))}</div><div><h2>NIST CSF 2.0 functions</h2>${barRows(Object.keys(CSF).filter(k=>csf[k]!==undefined).map(k=>[CSF[k],csf[k]]))}</div></div>
+  <p class="callout muted" style="font-size:.92rem">Under Public Law 116-321, HHS must consider whether recognized security practices such as NIST CSF and 405(d) HICP were in place for the prior 12 months when deciding HIPAA penalties. Months with at least 80% of checks completed across locations: <b>${pm.n} of 12</b>.</p>`:''}
+  <div class="grid2 section"><div><h2>Leadership sign-off</h2><p class="muted" style="margin-bottom:12px">Record your annual review of the risk analysis and risk plan. It appears on the executive report.</p>
+    ${last?`<p style="margin-bottom:12px"><span class="badge pass">Signed</span> ${esc(last.name)} on ${fmtY(last.at)} at ${last.score==null?'–':last.score}% readiness</p>`:''}
+    <div class="field"><label for="so-name">Your name</label><input type="text" id="so-name" value="${esc(S.org.exec)}"></div>
+    <label style="display:flex;gap:10px;align-items:flex-start;margin-bottom:12px"><input type="checkbox" id="so-ok" style="width:22px;height:22px;accent-color:var(--accent)"><span>I reviewed the risk analysis, open risks, and fix plans for all locations.</span></label>
+    <button class="btn primary" data-act="signoff">Record sign-off</button></div>
+  <div><h2>Reports</h2><p class="muted" style="margin-bottom:14px">HIPAA Security Risk Assessment, cyber insurance controls summary, OSHA binder, corrective action plan, daily logs, and the executive scorecard, as PDF or Excel.</p><div class="exports"><button class="btn primary" data-act="tab" data-id="reports">Open reports</button></div></div></div>`;
+}
+function viewLocDash(eid,fromExec){
+  const e=ent(eid);const s=entStats(e);const od=overdueOf(eid);const op=risksOf([eid]).filter(isOpen);const hi=op.filter(r=>r.l*r.i>=6);
+  const ex=exceptionsOf(eid);const pm=practiceMonths([eid]);const es=escalations([eid]);
+  const fw=bucket([eid],t=>CATS[t.cat]?t.cat:null),csf=bucket([eid],t=>t.csf?t.csf.slice(0,2):null);
+  return `${fromExec?'<button class="btn ghost back" data-act="undrill">← All locations</button>':escBanner(eid)}
+  <section class="hero"><div><h1 style="font-size:1.1rem;margin-bottom:10px">${esc(e.name)} readiness ${statusHTML(s.status)}</h1><div class="score"><b class="num">${s.score==null?'–':s.score}</b>${s.score==null?'':'<span class="pct">%</span>'}</div>
+  <p class="score-caption muted">Average of this location’s program scores: checks completed and passed out of those due so far. Overdue and missed checks count against it.</p></div><div>${sparkSVG(trend([eid]))}</div></section>
+  <div class="stats"><div class="stat"><b class="num">${s.wk==null?'–':s.wk+'%'}</b><span>This week’s round</span></div><div class="stat"><b class="num" style="color:${od.length?'var(--fail)':'inherit'}">${od.length}</b><span>Overdue${missedOf(eid).length?', '+missedOf(eid).length+' missed':''}</span></div><div class="stat"><b class="num" style="color:${hi.length?'var(--fail)':'inherit'}">${hi.length}</b><span>High or critical risks</span></div><div class="stat"><b class="num">${pm.n}<span class="muted" style="font-size:1rem"> / 12</span></b><span>Months at 80% or better</span></div></div>
+  ${fromExec&&es.length?`<div class="section"><h2>Escalations</h2>${escList(es,true)}</div>`:''}
+  <div class="grid2 section"><div><h2>By program</h2>${barRows(Object.keys(PROGS).filter(p=>s.progs[p]!==undefined).map(p=>[PROGS[p],s.progs[p]]))}</div>
+  <div><h2>Exceptions in the last 7 days</h2>${ex.length?'<div class="list">'+ex.slice(0,8).map(x=>`<button class="item" data-act="open-task" data-id="${x.o.id}"><span class="mark fail">${ICON.x}</span><span class="body"><span class="title">${esc(x.q)}</span><span class="meta"><span>${esc(x.o.task.title)}</span><span>${fmt(x.o.due)}</span><span>${esc(x.c.by)}</span></span></span></button>`).join('')+'</div>':'<div class="empty">No “No” answers on rounds this week.</div>'}</div></div>
+  ${od.length||hi.length?`<div class="section"><h2>Needs attention</h2><div class="list">${hi.map(r=>riskRow(r,false)).join('')}${od.slice(0,8).map(o=>itemRow(o)).join('')}</div></div>`:''}
+  ${Object.keys(fw).length?`<div class="grid2 section"><div><h2>HIPAA safeguards</h2>${barRows(Object.keys(CATS).filter(k=>fw[k]!==undefined).map(k=>[CATS[k],fw[k]]))}</div><div><h2>NIST CSF 2.0 functions</h2>${barRows(Object.keys(CSF).filter(k=>csf[k]!==undefined).map(k=>[CSF[k],csf[k]]))}</div></div>`:''}
+  <div class="section"><h2>Reports</h2><p class="muted" style="margin:-4px 0 14px;max-width:62ch">Security risk assessment, OSHA binder, daily operations and temperature log, and the activity and evidence report for ${esc(e.name)}.</p><div class="exports"><button class="btn primary" data-act="open-reports" data-id="${eid}">Open reports</button></div></div>`;
+}
+
+/* ---------- Settings ---------- */
+function viewSettings(){
+  const o=S.org;const exec=S.ui.role==='exec';
+  return `<h1>Settings</h1>
+  <div class="grid2 section" style="margin-top:20px">
+    <div>
+      <div class="panel"><h2 style="margin-bottom:14px">Organization</h2>
+        <div class="field"><label for="s-org">Name</label><input type="text" id="s-org" value="${esc(o.name)}"></div>
+        <div class="row2"><div class="field"><label for="s-exec">Executive or compliance lead</label><input type="text" id="s-exec" value="${esc(o.exec)}"></div><div class="field"><label for="s-it">IT or shared services</label><input type="text" id="s-it" value="${esc(o.it||'')}"></div></div>
+        <div class="field"><label for="s-start">Program start</label><input type="date" id="s-start" value="${o.start}"><span class="hint">Checks are spread over 12 months from this date.</span></div>
+        <h3 style="margin:8px 0 4px">Programs</h3>
+        <div class="progs">${Object.keys(PROGS).map(p=>`<label><input type="checkbox" data-prog="${p}" ${o.progs.includes(p)?'checked':''}><span><b>${PROGS[p]}</b><br><span class="hint">${PROG_DESC[p]}</span></span></label>`).join('')}</div>
+        <button class="btn primary" data-act="save-settings" style="margin-top:8px">Save changes</button>
+      </div>
+      <div class="panel" style="margin-top:16px"><h2 style="margin-bottom:10px">Locations</h2>
+        <div id="locs">${S.locations.map(l=>`<div class="locrow" data-loc="${l.id}"><input type="text" data-f="name" value="${esc(l.name)}" aria-label="Location name"><input type="text" data-f="region" value="${esc(l.region||'')}" aria-label="Region" placeholder="Region"><input type="text" data-f="manager" value="${esc(l.manager)}" aria-label="Site manager" placeholder="Site manager"><button class="btn small danger" data-act="del-loc" data-id="${l.id}">Remove</button></div>`).join('')}</div>
+        <div class="exports" style="margin-top:6px"><button class="btn" data-act="add-loc">Add location</button><button class="btn primary" data-act="save-settings">Save changes</button></div>
+      </div>
+    </div>
+    <div>
+      <div class="panel"><h2 style="margin-bottom:8px">Your data</h2>
+        <p class="muted" style="margin-bottom:14px">In this prototype everything is stored on this device and works offline. Download a backup regularly.</p>
+        <div class="exports"><button class="btn" data-act="backup">Download backup</button><button class="btn" data-act="restore">Restore from backup</button></div>
+        <div class="exports" style="margin-top:10px"><button class="btn" data-act="demo">Load demo network</button><button class="btn danger" data-act="reset">Erase all data</button></div>
+      </div>
+      <div class="panel" style="margin-top:16px"><h2 style="margin-bottom:8px">Coverage</h2>
+        <p class="muted" style="font-size:.92rem">${LIB.length} checks across four programs: HIPAA Security Rule physical, administrative, and technical safeguards plus key Privacy and Breach Notification duties, mapped to NIST CSF 2.0 and HHS 405(d) HICP; OSHA bloodborne pathogens, exit routes, fire protection, first aid, and hazard communication; and daily open and close operations. About ${weeklyMinutes()} minutes a week per site.</p>
+        <p class="muted" style="font-size:.92rem;margin-top:10px">${APP} supports your compliance and safety programs. It doesn’t replace legal advice or a professional assessment.</p>
+      </div>
+    </div>
+  </div>`;
+}
+
+/* ===================== Reports ===================== */
+const RCSS=`.rpt{font-family:"Atkinson Hyperlegible",system-ui,sans-serif;color:#161826;font-size:10.5pt;line-height:1.45;max-width:1000px;margin:0 auto;padding:24px}
+.rpt h1{font-size:22pt;margin:0 0 4px}.rpt h2{font-size:14pt;margin:26px 0 8px;padding-bottom:4px;border-bottom:2px solid #3B44C4}.rpt h3{font-size:11pt;margin:16px 0 6px}
+.rpt table{width:100%;border-collapse:collapse;font-size:9pt;margin:6px 0}.rpt th,.rpt td{border:1px solid #cfd0c8;padding:5px 6px;text-align:left;vertical-align:top}.rpt th{background:#eceef7}
+.rpt .kpis{display:grid;gap:8px;margin:12px 0}.rpt .kpis div{border:1px solid #cfd0c8;padding:8px}.rpt .kpis b{display:block;font-size:16pt}
+.rpt .muted{color:#555a6e}.rpt .ph{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}.rpt .ph img{object-fit:cover;border:1px solid #ccc}
+.rpt .sig{margin-top:34px;display:grid;grid-template-columns:1fr 1fr;gap:30px}.rpt .sig div{border-top:1px solid #161826;padding-top:4px}
+@media print{.rpt{padding:0}.rpt h2{break-after:avoid}.rpt tr{break-inside:avoid}}`;
+const pct=v=>v==null?'–':v+'%';
+const csv=rows=>rows.map(r=>r.map(v=>{v=v==null?'':String(v);return /[",\r\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v}).join(',')).join('\r\n');
+const slug=s=>String(s).toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')||'report';
+const wrapDoc=(title,body)=>`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${esc(title)}</title><style>body{margin:0;background:#fff}${RCSS}</style></head><body>${body}</body></html>`;
+const RSTAT={open:'Open',progress:'In progress',mitigated:'Remediated',accepted:'Accepted'};
+const ISTAT={investigating:'Investigating',notbreach:'Not a breach',notified:'Notices sent',closed:'Closed'};
+const IKIND={privacy:'Privacy or security',injury:'Workplace injury or exposure',other:'Other'};
+const GREEN=[43,122,75],AMBER=[154,98,14],RED=[179,48,42];
+const CELLCOLOR={'Implemented':GREEN,'Partially implemented':AMBER,'Not implemented':RED,'Yes':GREEN,'Partial':AMBER,'No':RED,'Current':GREEN,'Overdue':RED,'Missed':RED,'On track':GREEN,'Needs attention':AMBER,'At risk':RED,'Critical':RED,'High':RED,'Out of range':RED,'In range':GREEN,'Remediated':GREEN};
+const hdr=(kicker,text,sub)=>({t:'title',kicker,text,sub});
+const P=text=>({t:'p',text}),Hd=text=>({t:'h',text}),SUB=text=>({t:'sub',text}),N=text=>({t:'note',text}),SIG=items=>({t:'sig',items});
+const cellStr=c=>c==null?'':String(c);
+const Tb=(head,rows,o)=>rows.length?Object.assign({t:'table',head,rows:rows.map(r=>r.map(cellStr))},o||{}):{t:'p',text:(o&&o.empty)||'None recorded.'};
+const KV=(rows,o)=>Object.assign({t:'kv',rows:rows.map(r=>r.map(cellStr))},o||{});
+const period=()=>fmtY(SCH.ys)+' to '+fmtY(addDays(SCH.ye,-1));
+const numberer=()=>{let n=0;return t=>Hd((++n)+'. '+t)};
+
+const A='Administrative',Ph='Physical',Te='Technical',Or='Organizational',Po='Policies and documentation';
+const SPEC=[
+[A,'Security management process','Risk analysis','164.308(a)(1)(ii)(A)','R',['sra-signoff','assets']],
+[A,'Security management process','Risk management','164.308(a)(1)(ii)(B)','R',['sra-signoff','insurance']],
+[A,'Security management process','Sanction policy','164.308(a)(1)(ii)(C)','R',['sanctions']],
+[A,'Security management process','Information system activity review','164.308(a)(1)(ii)(D)','R',['logs','login-monitor','mdr']],
+[A,'Assigned security responsibility','Security official','164.308(a)(2)','R',['sec-officer']],
+[A,'Workforce security','Authorization and/or supervision','164.308(a)(3)(ii)(A)','A',['onboard']],
+[A,'Workforce security','Workforce clearance procedure','164.308(a)(3)(ii)(B)','A',['onboard']],
+[A,'Workforce security','Termination procedures','164.308(a)(3)(ii)(C)','A',['offboard','keys']],
+[A,'Information access management','Isolating health care clearinghouse functions','164.308(a)(4)(ii)(A)','R',[],'Applies only to health care clearinghouses'],
+[A,'Information access management','Access authorization','164.308(a)(4)(ii)(B)','A',['roles','admin-accts']],
+[A,'Information access management','Access establishment and modification','164.308(a)(4)(ii)(C)','A',['roles','onboard']],
+[A,'Security awareness and training','Security reminders','164.308(a)(5)(ii)(A)','A',['phish','training']],
+[A,'Security awareness and training','Protection from malicious software','164.308(a)(5)(ii)(B)','A',['av','patch','email-sec']],
+[A,'Security awareness and training','Log-in monitoring','164.308(a)(5)(ii)(C)','A',['login-monitor']],
+[A,'Security awareness and training','Password management','164.308(a)(5)(ii)(D)','A',['passwords']],
+[A,'Security incident procedures','Response and reporting','164.308(a)(6)(ii)','R',['ir-contacts','incident-review']],
+[A,'Contingency plan','Data backup plan','164.308(a)(7)(ii)(A)','R',['backup-check']],
+[A,'Contingency plan','Disaster recovery plan','164.308(a)(7)(ii)(B)','R',['contingency','restore']],
+[A,'Contingency plan','Emergency mode operation plan','164.308(a)(7)(ii)(C)','R',['contingency','tabletop']],
+[A,'Contingency plan','Testing and revision procedures','164.308(a)(7)(ii)(D)','A',['tabletop','restore']],
+[A,'Contingency plan','Applications and data criticality analysis','164.308(a)(7)(ii)(E)','A',['contingency']],
+[A,'Evaluation','Periodic technical and nontechnical evaluation','164.308(a)(8)','R',['sra-signoff']],
+[A,'Business associate contracts','Written contract or other arrangement','164.308(b)(3)','R',['baa','new-vendors']],
+[Ph,'Facility access controls','Contingency operations','164.310(a)(2)(i)','A',['contingency']],
+[Ph,'Facility access controls','Facility security plan','164.310(a)(2)(ii)','A',['phys-round','keys']],
+[Ph,'Facility access controls','Access control and validation procedures','164.310(a)(2)(iii)','A',['keys','phys-round']],
+[Ph,'Facility access controls','Maintenance records','164.310(a)(2)(iv)','A',['facility-maint']],
+[Ph,'Workstation use','Workstation use','164.310(b)','R',['phys-round','close']],
+[Ph,'Workstation security','Workstation security','164.310(c)','R',['phys-round','autolock']],
+[Ph,'Device and media controls','Disposal','164.310(d)(2)(i)','R',['disposal']],
+[Ph,'Device and media controls','Media re-use','164.310(d)(2)(ii)','R',['disposal']],
+[Ph,'Device and media controls','Accountability','164.310(d)(2)(iii)','A',['assets','mobile']],
+[Ph,'Device and media controls','Data backup and storage','164.310(d)(2)(iv)','A',['backup-check']],
+[Te,'Access control','Unique user identification','164.312(a)(2)(i)','R',['shared-logins']],
+[Te,'Access control','Emergency access procedure','164.312(a)(2)(ii)','R',['emergency-access']],
+[Te,'Access control','Automatic logoff','164.312(a)(2)(iii)','A',['autolock']],
+[Te,'Access control','Encryption and decryption','164.312(a)(2)(iv)','A',['encrypt','mobile']],
+[Te,'Audit controls','Audit controls','164.312(b)','R',['logs','integrity']],
+[Te,'Integrity','Mechanism to authenticate ePHI','164.312(c)(2)','A',['integrity']],
+[Te,'Person or entity authentication','Person or entity authentication','164.312(d)','R',['mfa','passwords']],
+[Te,'Transmission security','Integrity controls','164.312(e)(2)(i)','A',['email-sec','remote']],
+[Te,'Transmission security','Encryption','164.312(e)(2)(ii)','A',['email-sec','wifi']],
+[Or,'Business associate contracts','Business associate contracts or other arrangements','164.314(a)','R',['baa']],
+[Or,'Group health plan requirements','Plan documents','164.314(b)','R',[],'Applies only to group health plans'],
+[Po,'Policies and procedures','Policies and procedures','164.316(a)','R',['policies']],
+[Po,'Documentation','Time limit (6 years)','164.316(b)(2)(i)','R',['policies']],
+[Po,'Documentation','Availability','164.316(b)(2)(ii)','R',['policies']],
+[Po,'Documentation','Updates','164.316(b)(2)(iii)','R',['policies']]
+];
+const PRIV=[['Notice of privacy practices','164.520',['npp']],['Right of access','164.524',['access-requests']],['Privacy official','164.530(a)',['priv-officer']],['Workforce privacy training','164.530(b)',['training']],['Safeguards for PHI in any form','164.530(c)',['phys-round','close']],['Breach notification','164.400 to 164.414',['incident-review']]];
+const INSQ=[
+['mfa-email','Identity and email','Is multi-factor authentication required for all email access, including webmail and mobile?',['mfa']],
+['mfa-remote','Identity and email','Is MFA required for all remote access to the network (VPN, remote desktop, remote tools)?',['remote','mfa']],
+['mfa-admin','Identity and email','Is MFA required for all privileged or administrator accounts?',['admin-accts']],
+['admin-sep','Identity and email','Do administrators use separate accounts for privileged tasks, with rights limited to those who need them?',['admin-accts','roles']],
+['email-filter','Identity and email','Do you filter inbound email for malicious links and attachments and tag external senders?',['email-sec']],
+['dmarc','Identity and email','Are SPF, DKIM, and DMARC configured for your email domains?',['email-sec']],
+['offboard','Identity and email','Is access removed promptly when employees or contractors leave?',['offboard']],
+['edr','Endpoints','Is endpoint detection and response (EDR) deployed on all workstations and servers?',['av']],
+['mdr','Endpoints','Are security alerts monitored 24/7 by an internal team or managed provider (MDR or SOC)?',['mdr']],
+['patch','Endpoints','Are critical security patches applied within 30 days of release?',['patch']],
+['eol','Endpoints','Is all software supported by its vendor, or are unsupported systems isolated?',['patch','devices-med']],
+['encrypt','Endpoints','Are laptops and mobile devices that access PHI encrypted?',['encrypt','mobile']],
+['backup-freq','Backups and recovery','Are critical systems and data backed up at least weekly?',['backup-check']],
+['backup-offline','Backups and recovery','Is at least one backup copy offline, immutable, or otherwise protected from deletion by an attacker?',['backup-check','integrity']],
+['restore','Backups and recovery','Have you successfully tested restoring from backup in the past 12 months?',['restore']],
+['drp','Backups and recovery','Do you have a business continuity or disaster recovery plan?',['contingency']],
+['rdp','Network','Is remote desktop (RDP) blocked from direct internet access?',['remote']],
+['segment','Network','Is the guest or public network separated from clinical systems?',['wifi']],
+['firewall','Network','Are firewalls in place and maintained with current firmware?',['firewall']],
+['meddev','Network','Are network-connected medical devices inventoried and kept updated?',['devices-med']],
+['assets','Governance','Do you maintain an inventory of hardware assets?',['assets']],
+['training','Governance','Do all staff complete security awareness training, including phishing, at least annually?',['training','phish']],
+['irp','Governance','Do you have a written incident response plan that has been tested?',['ir-contacts','tabletop']],
+['vendors','Governance','Do vendors with access to PHI or your network sign agreements requiring security safeguards?',['baa','new-vendors']],
+['sra','Governance','Have you completed a HIPAA security risk assessment in the past 12 months?',['sra-signoff']],
+['officer','Governance','Is a specific person responsible for information security?',['sec-officer']],
+['prior','Loss history','Have you had a cyber incident, data breach, or ransomware event in the past 3 years?',[]]
+];
+function enabledIds(ids){return ids.filter(id=>LIBMAP[id]&&S.org.progs.includes(LIBMAP[id].prog))}
+function specEval(checks,eids){
+  if(!checks.length)return {status:'Document manually',score:null,last:0,open:0,names:''};
+  const en=enabledIds(checks);if(!en.length)return {status:'Program not enabled',score:null,last:0,open:0,names:''};
+  const set=new Set(en);const sc=bucket(eids,t=>set.has(t.id)?'x':null).x;let last=0;
+  for(const eid of eids)for(const id of en){for(const o of SERIES[eid+':'+id]||[]){const c=S.done[o.id];if(c){const t=Date.parse(c.at);if(t>last)last=t}}}
+  const open=S.risks.filter(r=>isOpen(r)&&eids.includes(r.eid)&&set.has(r.taskId)).length;
+  const status=sc==null?'Not yet assessed':sc>=85?'Implemented':sc>=50?'Partially implemented':'Not implemented';
+  return {status,score:sc==null?null:sc,last,open,names:en.map(id=>LIBMAP[id].title).join('; ')};
+}
+function latestResults(eids,ids){const out=[];for(const eid of eids)for(const id of ids){const ser=SERIES[eid+':'+id];if(!ser)continue;for(let j=ser.length-1;j>=0;j--){const c=S.done[ser[j].id];if(c){out.push({eid,id,c});break}}}return out}
+function insEval(q){
+  const [id,,,checks]=q;const ov=S.ins[id]||{};let auto='Not verified',basis;
+  if(id==='prior'){const since=addDays(SCH.today,-1095);const inc=S.incidents.filter(x=>(x.kind||'privacy')==='privacy'&&parseDay(x.discovered)>=since);basis=inc.length+' privacy or security incident'+(inc.length===1?'':'s')+' logged in AuditTrack in the past 3 years ('+inc.filter(x=>x.status==='notified').length+' with notices sent). Confirm against records before AuditTrack.'}
+  else{const en=enabledIds(checks);const names=[...new Set(en.map(c=>LIBMAP[c].title))].join('; ');const L=latestResults(ents().map(e=>e.id),en);
+    if(!en.length)basis='No matching check enabled. Answer from your records.';
+    else if(!L.length)basis=names+'. Not completed yet this period.';
+    else{const ok=L.filter(x=>x.c.result==='pass'||x.c.result==='na').length;auto=ok===L.length?'Yes':L.every(x=>x.c.result==='fail')?'No':'Partial';basis=names+'. '+ok+' of '+L.length+' latest results passing; last verified '+fmtY(Math.max(...L.map(x=>Date.parse(x.c.at))))+'.'}}
+  return {auto,ans:ov.ans||auto,manual:!!ov.ans,note:ov.note||'',basis};
+}
+function seriesStatus(eid,id){
+  const ser=SERIES[eid+':'+id]||[];const due=ser.filter(o=>o.due<=SCH.today);
+  if(!due.length)return {status:'Not yet due',c:null,missed:0};
+  const lastDone=[...due].reverse().find(o=>S.done[o.id]);const pending=due.some(o=>!S.done[o.id]&&!sup(o)&&o.due<SCH.today);
+  const latest=due[due.length-1];
+  return {status:pending?'Overdue':S.done[latest.id]?'Current':'Due today',c:lastDone?S.done[lastDone.id]:null,missed:due.filter(o=>!S.done[o.id]&&sup(o)).length};
+}
+const locLabel=id=>id==='all'?'All locations':ent(id).name;
+
+/* ---------- Report documents ---------- */
+function docSRA(sites,label){
+  const incl=['corp',...sites];const H2=numberer();
+  const rows=SPEC.map(([sg,std,spec,ref,ra,ch,na])=>{if(na)return [sg,std,spec,'§'+ref,ra==='R'?'Required':'Addressable','Not applicable','–','–',0,na];const v=specEval(ch,incl);return [sg,std,spec,'§'+ref,ra==='R'?'Required':'Addressable',v.status,pct(v.score),v.last?fmt(v.last):'–',v.open,v.names||'Document outside AuditTrack']});
+  const app=rows.filter(r=>r[5]!=='Not applicable');const cnt=s=>app.filter(r=>r[5]===s).length;
+  const risks=risksOf(incl).sort((a,b)=>b.l*b.i-a.l*a.i);const open=risks.filter(isOpen);
+  const reg=risks.map((r,k)=>['R-'+String(k+1).padStart(3,'0'),(ent(r.eid)||{}).name||'',r.threat||'',r.title+(r.cite?' ('+r.cite+')':''),r.finding||'',LVL[r.l],LVL[r.i],rate(r.l,r.i)[0],r.plan||(isOpen(r)?'Plan pending':''),r.owner,fmt(parseDay(r.due)),RSTAT[r.status]]);
+  const priv=PRIV.map(([n,ref,ch])=>{const v=specEval(ch,incl);return [n,'§'+ref,v.status,pct(v.score),v.last?fmt(v.last):'–']});
+  const locs=sites.map(id=>{const e=ent(id);const b=bucket([id],t=>CATS[t.cat]?t.cat:null);return [e.name,e.region||'',pct(entScore(id).score),pct(b.physical),pct(b.admin),pct(b.technical)]});
+  const inc=S.incidents.filter(x=>incl.includes(x.eid)&&(x.kind||'privacy')!=='injury').map(x=>[fmtY(parseDay(x.discovered)),(ent(x.eid)||{}).name||'',x.title,x.count||'–',x.phi,ISTAT[x.status],x.actions||'']);
+  return {title:'HIPAA Security Risk Assessment',file:'hipaa-sra',landscape:true,blocks:[
+    hdr('HIPAA Security Risk Assessment, 45 CFR 164.308(a)(1)(ii)(A)',S.org.name,label+'. Assessment period '+period()+'. Generated '+fmtY(new Date())+'.'),
+    {t:'kpis',items:[[cnt('Implemented')+' of '+app.length,'Applicable specifications implemented'],[String(cnt('Partially implemented')),'Partially implemented'],[String(cnt('Not implemented')),'Not implemented'],[open.length+' ('+open.filter(r=>r.l*r.i>=6).length+' high or critical)','Open risks']]},
+    H2('Scope and purpose'),
+    P('This assessment evaluates potential risks and vulnerabilities to the confidentiality, integrity, and availability of electronic protected health information (ePHI) created, received, maintained, or transmitted by '+S.org.name+', as required by 45 CFR 164.308(a)(1)(ii)(A). It covers the locations listed and organization-wide shared services, including workforce, facilities, workstations and devices, network and cloud systems, and business associates.'),
+    KV([['Organization',S.org.name],['Locations in scope',(sites.length>1?sites.length+' locations':label)+', plus shared services'],['Assessment period',period()],['Security official',S.org.exec],['IT and shared services',S.org.it||'Not specified'],['Report generated',fmtY(new Date())]],{sheet:'Scope'}),
+    H2('Methodology'),
+    P('The assessment follows the risk assessment process in NIST SP 800-30 Rev. 1 and the HIPAA Security Rule guidance in NIST SP 800-66 Rev. 2. Instead of a single annual interview, each control was verified through recurring checks completed by site managers and shared services throughout the period, each recorded with a named person, a timestamp, notes, and photo evidence where applicable. Every Security Rule implementation specification is mapped to the checks that verify it, and its status reflects the share of those checks completed and passed during the period. Gaps were recorded as risks, rated by likelihood and impact, assigned an owner and target date, and tracked to resolution.'),
+    Tb(['Rating','Likelihood','Impact'],[['Low','Unlikely: controls in place or little exposure','Limited: few records, quick recovery, notification unlikely'],['Medium','Possible: controls partly in place','Moderate: disruption or exposure where notification is possible'],['High','Likely: controls missing or threat common in healthcare','Major: care disrupted, large exposure, notification and penalties likely']],{sheet:'Rating criteria'}),
+    Tb(['Likelihood by impact','Low impact','Medium impact','High impact'],[3,2,1].map(l=>[LVL[l]+' likelihood',...[1,2,3].map(i=>rate(l,i)[0])]),{sheet:'Risk matrix'}),
+    N('Status definitions: Implemented, 85% or more of mapped checks passed; Partially implemented, 50 to 84%; Not implemented, under 50%; Not yet assessed, no mapped check has come due. Addressable specifications must be implemented where reasonable and appropriate, or the reason and any equivalent measure documented.'),
+    H2('Security Rule safeguard assessment'),
+    Tb(['Safeguard','Standard','Implementation specification','Reference','R/A','Status','Score','Last verified','Open findings','Verified by'],rows,{widths:[62,86,98,80,58,74,34,46,40,'auto'],small:true,sheet:'Safeguards'}),
+    H2('Related Privacy Rule and Breach Notification items'),
+    Tb(['Requirement','Reference','Status','Score','Last verified'],priv,{sheet:'Privacy and breach'}),
+    ...(sites.length>1?[H2('Results by location'),Tb(['Location','Region','Readiness','Physical','Administrative','Technical'],locs,{sheet:'Locations'})]:[]),
+    H2('Risk register and treatment plan'),
+    Tb(['ID','Location','Threat','Control gap','Finding','Likelihood','Impact','Risk level','Treatment','Owner','Target','Status'],reg,{small:true,sheet:'Risk register',empty:'No risks were identified during the period.'}),
+    H2('Security incidents'),
+    Tb(['Discovered','Location','Incident','People','PHI involved','Status','Actions'],inc,{small:true,sheet:'Incidents',empty:'No privacy or security incidents were logged during the period.'}),
+    H2('Approval'),
+    P(S.signoffs.length?S.signoffs.map(s=>s.name+' reviewed the risk analysis, open risks, and treatment plans on '+fmtY(s.at)+'.').join(' '):'No leadership sign-off has been recorded in AuditTrack for this period.'),
+    SIG(['Security official: signature and date','Executive approval: signature and date']),
+    N('Retain this assessment and supporting documentation for at least six years (45 CFR 164.316(b)(2)). This report supports, but doesn’t replace, legal advice.')
+  ]};
+}
+function docCAP(eids,label){
+  const H2=numberer();const risks=risksOf(eids).sort((a,b)=>(isOpen(b)-isOpen(a))||(b.l*b.i-a.l*a.i));const open=risks.filter(isOpen);
+  return {title:'Corrective action plan',file:'corrective-action-plan',landscape:true,blocks:[
+    hdr('Corrective action plan',S.org.name,label+'. Period '+period()+'. Generated '+fmtY(new Date())+'.'),
+    {t:'kpis',items:[[String(open.length),'Open findings'],[String(open.filter(r=>r.l*r.i>=6).length),'High or critical'],[String(open.filter(r=>parseDay(r.due)<SCH.today).length),'Past target date'],[String(risks.filter(r=>r.status==='mitigated').length),'Remediated']]},
+    H2('Findings and actions'),
+    Tb(['ID','Location','Finding','Reference','Risk level','Corrective action','Owner','Target','Status','Opened','Closed'],risks.map((r,k)=>['CA-'+String(k+1).padStart(3,'0'),(ent(r.eid)||{}).name||'',r.title+(r.finding?': '+r.finding:''),r.cite||'',rate(r.l,r.i)[0],r.plan||'Plan pending',r.owner,fmt(parseDay(r.due)),RSTAT[r.status],fmt(r.created),r.closed?fmt(r.closed):'']),{small:true,sheet:'Corrective actions',empty:'No findings recorded.'}),
+    SIG(['Prepared by: signature and date','Approved by: signature and date'])
+  ]};
+}
+function docIns(){
+  const sec={};INSQ.forEach(q=>{(sec[q[1]]=sec[q[1]]||[]).push(q)});const ev=INSQ.map(insEval);const c=a=>ev.filter(x=>x.ans===a).length;
+  return {title:'Cyber insurance controls summary',file:'cyber-insurance-controls',blocks:[
+    hdr('Cyber insurance controls summary',S.org.name,'Prepared '+fmtY(new Date())+' for broker and carrier review.'),
+    {t:'kpis',items:[[String(c('Yes')),'Yes'],[String(c('Partial')),'Partial'],[String(c('No')),'No'],[String(c('Not verified')),'Not verified']]},
+    KV([['Organization',S.org.name],['Locations',String(S.locations.length)],['Security contact',S.org.exec],['IT or managed provider',S.org.it||'Not specified'],['Basis','Checks completed in AuditTrack, '+period()]],{sheet:'Profile'}),
+    P('Carriers word their applications and ransomware supplements differently. Use this summary to complete your carrier’s form, and attach it where supporting detail is allowed.'),
+    ...Object.keys(sec).flatMap(s=>[Hd(s),Tb(['Question','Answer','Basis','Notes'],sec[s].map(q=>{const v=insEval(q);return [q[2],v.ans,v.basis+(v.manual?' Answer set manually.':''),v.note]}),{widths:[170,52,200,'auto'],small:true,sheet:s})]),
+    N('Answers reflect completed checks as of the date above. Inaccurate statements on an insurance application can affect coverage, so confirm each answer with your IT provider before submitting.'),
+    SIG(['Prepared by: signature and date','Reviewed by: signature and date'])
+  ]};
+}
+function docOSHA(sites,label){
+  const tasks=LIB.filter(t=>t.prog==='osha');const H2=numberer();
+  const blocks=[hdr('OSHA safety compliance binder',S.org.name,label+'. Period '+period()+'. Generated '+fmtY(new Date())+'.'),
+    P('Records of recurring safety inspections and program reviews under 29 CFR 1910 and 1904, as completed in AuditTrack. Keep written programs (exposure control plan, emergency action plan, hazard communication) and training sign-in sheets with this binder.')];
+  for(const id of sites){const e=ent(id);
+    blocks.push(H2(e.name+(e.region?', '+e.region:'')));
+    blocks.push(Tb(['Requirement','Standard','Frequency','Last completed','By','Result','Missed this year','Status'],tasks.map(t=>{const st=seriesStatus(id,t.id);return [t.title,t.cite,FREQ[t.freq],st.c?fmt(st.c.at):'–',st.c?st.c.by:'',st.c?RES[st.c.result]:'',st.missed,st.status]}),{small:true,sheet:e.name+' status'}));
+    tasks.filter(t=>t.freq==='weekly'||t.freq==='monthly').forEach(t=>{const ser=(SERIES[id+':'+t.id]||[]).filter(o=>o.due<=SCH.today).reverse();
+      blocks.push(SUB(t.title+' log, '+t.cite));
+      blocks.push(Tb(['Due','Completed','By','Result','Notes'],ser.map(o=>{const c=S.done[o.id];return [fmt(o.due),c?fmtT(c.at):(sup(o)?'Missed':(o.due<SCH.today?'Overdue':'Due today')),c?c.by:'',c?RES[c.result]:'',c?c.note||'':'']}),{small:true,sheet:e.name+' '+t.id,empty:'No inspections due yet.'}))});
+    const inj=S.incidents.filter(x=>x.eid===id&&x.kind==='injury');
+    blocks.push(SUB('Workplace injuries and exposures'));
+    blocks.push(Tb(['Date','What happened','People','Status','Actions'],inj.map(x=>[fmtY(parseDay(x.discovered)),x.title+(x.description?': '+x.description:''),x.count||'',ISTAT[x.status],x.actions||'']),{small:true,sheet:e.name+' injuries',empty:'No workplace injuries or exposures logged.'}));
+  }
+  blocks.push(N('Use the injury list to complete OSHA Forms 300 and 301 if your establishment is not partially exempt. All employers must report a work-related fatality within 8 hours, and an inpatient hospitalization, amputation, or loss of an eye within 24 hours (29 CFR 1904.39).'));
+  blocks.push(SIG(['Site manager: signature and date','Safety officer: signature and date']));
+  return {title:'OSHA safety compliance binder',file:'osha-binder',landscape:true,blocks};
+}
+function docDaily(eid,ym){
+  const e=ent(eid);const [Y,M]=ym.split('-').map(Number);const ms=new Date(Y,M-1,1),me=new Date(Y,M,1);
+  const day={};for(const k of ['open','close'])for(const o of SERIES[eid+':'+k]||[]){if(o.due>=ms&&o.due<me&&o.due<=SCH.today)(day[+o.due]=day[+o.due]||{})[k]=o}
+  const tI=LIBMAP.open.items.findIndex(i=>i.num);const tm=c=>new Date(c.at).toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit'});
+  let excursions=[],exCount=0,oDone=0,cDone=0;const keys=Object.keys(day).sort((a,b)=>a-b);
+  const rows=keys.map(k=>{const d=new Date(+k),x=day[k];const co=x.open&&S.done[x.open.id],cc=x.close&&S.done[x.close.id];if(co)oDone++;if(cc)cDone++;
+    const v=co&&co.vals?co.vals[tI]:null;const tStat=v==null?(co&&co.ans&&co.ans[tI]==='na'?'N/A':''):(co.ans[tI]==='y'?'In range':'Out of range');
+    if(tStat==='Out of range')excursions.push([d.toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric'}),v+'°F',co.by,co.note||'No action recorded']);
+    const ex=[];[[x.open,co],[x.close,cc]].forEach(([o,c])=>{if(o&&c&&c.ans)c.ans.forEach((a,i)=>{if(a==='n'&&!(o.task.items[i].num)){ex.push(o.task.items[i].q);exCount++}})});
+    return [d.toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric'}),co?tm(co):'Missed',co?co.by:'',v==null?'':v+'°F',tStat,cc?tm(cc):'Missed',cc?cc.by:'',ex.join('; ')]});
+  const monthName=ms.toLocaleDateString(undefined,{month:'long',year:'numeric'});
+  return {title:'Daily operations and temperature log',file:'daily-log-'+ym,landscape:true,blocks:[
+    hdr('Daily operations and temperature log',e.name,S.org.name+'. '+monthName+'. Manager: '+e.manager+'. Generated '+fmtY(new Date())+'.'),
+    {t:'kpis',items:[[keys.length?Math.round(oDone/keys.length*100)+'%':'–','Opening checklists completed'],[keys.length?Math.round(cDone/keys.length*100)+'%':'–','Closing checklists completed'],[String(excursions.length),'Temperature excursions'],[String(exCount),'Other exceptions']]},
+    Hd('Daily log'),
+    Tb(['Date','Opened','By','Refrigerator','Range 36 to 46°F','Closed','By','Exceptions'],rows,{small:true,sheet:'Daily log',empty:'No business days recorded in this month yet.'}),
+    Hd('Temperature excursions'),
+    Tb(['Date','Reading','Recorded by','Action taken'],excursions,{sheet:'Excursions',empty:'No out-of-range readings this month.'}),
+    N('Readings are recorded at opening each business day. CDC guidance calls for refrigerated vaccines to be stored between 36 and 46°F and for minimum and maximum temperatures to be checked and recorded at the start of each workday; follow your state or VFC program’s requirements for digital data loggers and excursion response.'),
+    SIG(['Reviewed by: signature and date','Title'])
+  ]};
+}
+function docExec(){
+  const eids=ents().map(e=>e.id);const st=eids.map(id=>entStats(ent(id))).sort((a,b)=>(a.score==null?101:a.score)-(b.score==null?101:b.score));
+  const score=avg(st.map(s=>s.score));const es=escalations(eids);const op=risksOf(eids).filter(isOpen);const pm=practiceMonths(eids);const progs=Object.keys(PROGS).filter(p=>S.org.progs.includes(p));const H2=numberer();
+  return {title:'Executive scorecard',file:'executive-scorecard',landscape:true,blocks:[
+    hdr('Executive compliance and operations scorecard',S.org.name,S.locations.length+' locations. Program year '+period()+'. Generated '+fmtY(new Date())+'.'),
+    {t:'kpis',items:[[pct(score),'Average readiness'],[String(st.filter(s=>s.status==='red').length),'Locations at risk'],[String(es.length),'Active escalations'],[op.length+' ('+op.filter(r=>r.l*r.i>=6).length+' high)','Open risks']]},
+    P(st.filter(s=>s.status==='green').length+' locations are on track and '+st.filter(s=>s.status==='amber').length+' need attention. Months with at least 80% of checks completed across the organization: '+pm.n+' of 12.'),
+    H2('Location scorecard'),
+    Tb(['Location','Region','Manager','Readiness',...progs.map(p=>PROGS[p]),'This week','Overdue','Escalations','Open risks','Status'],st.map(s=>[s.e.name,s.e.region||'',s.e.manager,pct(s.score),...progs.map(p=>pct(s.progs[p])),pct(s.wk),s.od,s.esc,s.open,STATUS[s.status]]),{small:true,sheet:'Scorecard'}),
+    H2('Escalations'),
+    Tb(['Location','Check','Missed in a row','Last due','Assigned to'],es.map(x=>[ent(x.eid).name,x.task.title,x.streak,fmt(x.last.due),assignee(x.eid,x.task)]),{small:true,sheet:'Escalations',empty:'No active escalations.'}),
+    H2('Leadership follow-ups'),
+    Tb(['Location','Check','Followed up by','Date'],Object.entries(S.acks).map(([k,v])=>{const [eid,tid]=k.split(':');const e=ent(eid),t=LIBMAP[tid];return e&&t?[e.name,t.title,v.by,fmt(v.at)]:null}).filter(Boolean),{sheet:'Follow-ups',empty:'No follow-ups recorded.'}),
+    H2('Attestation'),
+    P(S.signoffs.length?S.signoffs.map(s=>s.name+' signed off on '+fmtY(s.at)+' at '+pct(s.score)+' readiness.').join(' '):'No sign-off recorded yet.'),
+    SIG(['Executive: signature and date','Compliance or security official: signature and date'])
+  ]};
+}
+async function docActivity(eid){
+  const e=ent(eid);const s=entStats(e);const photos={};for(const r of await idb.all())photos[r.id]=r.data;
+  const occ=(OCCE[eid]||[]).filter(o=>o.task.freq!=='daily'&&(o.due<=SCH.today||S.done[o.id]));const imgs=[];
+  const rows=occ.map(o=>{const c=S.done[o.id];const t=o.task;if(c){(c.ev||[]).forEach(id=>{if(photos[id])imgs.push({src:photos[id],cap:t.title+', '+fmt(c.at)})});Object.entries(c.iev||{}).forEach(([i,ids])=>ids.forEach(id=>{if(photos[id])imgs.push({src:photos[id],cap:t.items[i].q+', '+fmt(c.at)})}))}
+    const no=c&&c.ans?t.items.map((it,i)=>c.ans[i]==='n'?it.q:'').filter(Boolean).join('; '):'';
+    return [fmt(o.due),t.title,PROGS[t.prog],t.cite||'See checklist items',c?RES[c.result]:(sup(o)?'Missed':o.due<SCH.today?'Overdue':'Due'),c?fmtT(c.at):'',c?c.by:'',[c&&c.note,no&&'Not met: '+no].filter(Boolean).join(' ')]});
+  const H2=numberer();
+  return {title:'Activity and evidence report',file:'activity-evidence',landscape:true,blocks:[
+    hdr('Activity and evidence report',e.name,S.org.name+(e.region?', '+e.region:'')+'. Manager: '+e.manager+'. Period '+period()+'. Generated '+fmtY(new Date())+'.'),
+    {t:'kpis',items:[[pct(s.score),'Readiness'],[String(s.od),'Overdue'],[String(s.esc),'Escalations'],[String(s.open),'Open risks']]},
+    Tb(['Program','Score'],Object.keys(PROGS).filter(p=>s.progs[p]!==undefined).map(p=>[PROGS[p],pct(s.progs[p])]),{sheet:'Programs'}),
+    H2('Activity log'),
+    Tb(['Due','Check','Program','Reference','Result','Completed','By','Notes and exceptions'],rows,{small:true,sheet:'Activity'}),
+    H2('Photo evidence'),
+    imgs.length?{t:'imgs',items:imgs}:P('No photos attached this period.'),
+    SIG(['Site manager: signature and date','Reviewed by: signature and date'])
+  ]};
+}
+
+/* ---------- Renderers ---------- */
+function toHTML(doc){
+  return '<div class="rpt">'+doc.blocks.map(x=>{switch(x.t){
+    case 'title':return `<p class="muted">${esc(x.kicker)}</p><h1>${esc(x.text)}</h1>${x.sub?'<p>'+esc(x.sub)+'</p>':''}`;
+    case 'h':return '<h2>'+esc(x.text)+'</h2>';case 'sub':return '<h3>'+esc(x.text)+'</h3>';
+    case 'p':return '<p>'+esc(x.text)+'</p>';case 'note':return '<p class="muted" style="font-size:9pt">'+esc(x.text)+'</p>';
+    case 'kpis':return '<div class="kpis" style="grid-template-columns:repeat('+x.items.length+',1fr)">'+x.items.map(([v,l])=>'<div><b>'+esc(v)+'</b>'+esc(l)+'</div>').join('')+'</div>';
+    case 'kv':return '<table>'+x.rows.map(r=>'<tr><th style="width:30%">'+esc(r[0])+'</th><td>'+esc(r[1])+'</td></tr>').join('')+'</table>';
+    case 'table':return '<table><tr>'+x.head.map(h=>'<th>'+esc(h)+'</th>').join('')+'</tr>'+x.rows.map(r=>'<tr>'+r.map(c=>'<td'+(CELLCOLOR[c]?' style="color:rgb('+CELLCOLOR[c].join(',')+');font-weight:700"':'')+'>'+esc(c)+'</td>').join('')+'</tr>').join('')+'</table>';
+    case 'imgs':return '<div class="ph">'+x.items.map(i=>'<figure style="margin:0;width:160px"><img src="'+i.src+'" alt="" width="160" height="120"><figcaption style="font-size:8pt">'+esc(i.cap)+'</figcaption></figure>').join('')+'</div>';
+    case 'sig':return '<div class="sig">'+x.items.map(s=>'<div>'+esc(s)+'</div>').join('')+'</div>';}return ''}).join('')+'</div>';
+}
+function toPDF(doc){
+  const {jsPDF}=window.jspdf;const pdf=new jsPDF({unit:'pt',format:'letter',orientation:doc.landscape?'landscape':'portrait'});
+  const W=pdf.internal.pageSize.getWidth(),Hh=pdf.internal.pageSize.getHeight(),M=40,BOT=Hh-46;let y=M;
+  const INK=[22,24,38],MUT=[85,90,110],ACC=[59,68,196];
+  const ensure=h=>{if(y+h>BOT){pdf.addPage();y=M}};
+  const text=(s,size,style,color,gap)=>{pdf.setFont('helvetica',style||'normal');pdf.setFontSize(size);pdf.setTextColor(...(color||INK));const lh=size*1.38;for(const ln of pdf.splitTextToSize(String(s),W-2*M)){ensure(lh);pdf.text(ln,M,y+size);y+=lh}y+=gap||0};
+  const tbl=(b,head)=>{ensure(Math.min(b.rows.length,3)*16+(head?24:6));const cs={};(b.widths||[]).forEach((w,i)=>{if(w!=='auto')cs[i]={cellWidth:w}});if(b.t==='kv')cs[0]={cellWidth:170,fontStyle:'bold',fillColor:[236,238,247]};
+    pdf.autoTable({startY:y,head:head?[head]:undefined,body:b.rows,margin:{left:M,right:M,top:M,bottom:Hh-BOT},theme:'grid',
+      styles:{font:'helvetica',fontSize:b.small?7:8.2,cellPadding:3,lineColor:[207,208,200],lineWidth:.5,textColor:INK,overflow:'linebreak',valign:'top'},
+      headStyles:{fillColor:[236,238,247],textColor:INK,fontStyle:'bold'},columnStyles:cs,rowPageBreak:'avoid',
+      didParseCell:d=>{if(d.section==='body'){const c=CELLCOLOR[d.cell.raw];if(c){d.cell.styles.textColor=c;d.cell.styles.fontStyle='bold'}}}});
+    y=pdf.lastAutoTable.finalY+12};
+  for(const b of doc.blocks){switch(b.t){
+    case 'title':text(b.kicker,8.5,'normal',MUT,2);text(b.text,20,'bold',INK,2);if(b.sub)text(b.sub,9.5,'normal',INK,6);break;
+    case 'h':y+=10;ensure(60);text(b.text,13,'bold',ACC);pdf.setDrawColor(...ACC);pdf.setLineWidth(1.2);pdf.line(M,y+1,W-M,y+1);y+=9;break;
+    case 'sub':y+=4;ensure(50);text(b.text,10,'bold',INK,3);break;
+    case 'p':text(b.text,9.2,'normal',INK,6);break;
+    case 'note':text(b.text,7.8,'normal',MUT,6);break;
+    case 'kpis':{const n=b.items.length,g=8,bw=(W-2*M-(n-1)*g)/n;ensure(56);b.items.forEach(([v,l],i)=>{const x=M+i*(bw+g);pdf.setDrawColor(207,208,200);pdf.setLineWidth(.8);pdf.rect(x,y,bw,48);pdf.setFont('helvetica','bold');pdf.setFontSize(15);pdf.setTextColor(...INK);pdf.text(String(v),x+8,y+20);pdf.setFont('helvetica','normal');pdf.setFontSize(7.8);pdf.setTextColor(...MUT);pdf.text(pdf.splitTextToSize(l,bw-16),x+8,y+33)});y+=60;break}
+    case 'kv':tbl(b,null);break;
+    case 'table':tbl(b,b.head);break;
+    case 'imgs':{const per=doc.landscape?5:4,g=10,iw=(W-2*M-(per-1)*g)/per,ih=iw*.75;b.items.forEach((im,i)=>{if(i%per===0){if(i)y+=ih+26;ensure(ih+26)}const x=M+(i%per)*(iw+g);try{pdf.addImage(im.src,im.src.startsWith('data:image/png')?'PNG':'JPEG',x,y,iw,ih)}catch(e){}pdf.setFont('helvetica','normal');pdf.setFontSize(6.8);pdf.setTextColor(...MUT);pdf.text(pdf.splitTextToSize(im.cap,iw).slice(0,2),x,y+ih+9)});y+=ih+30;break}
+    case 'sig':y+=26;ensure(40);{const bw=(W-2*M-30)/2;b.items.forEach((s,i)=>{const x=M+i*(bw+30);pdf.setDrawColor(...INK);pdf.setLineWidth(.8);pdf.line(x,y,x+bw,y);pdf.setFont('helvetica','normal');pdf.setFontSize(8);pdf.setTextColor(...INK);pdf.text(s,x,y+11)});y+=24}break;
+  }}
+  const n=pdf.getNumberOfPages();for(let i=1;i<=n;i++){pdf.setPage(i);pdf.setFont('helvetica','normal');pdf.setFontSize(7.2);pdf.setTextColor(...MUT);pdf.text(S.org.name+'  |  '+doc.title+'  |  Generated '+fmtY(new Date())+' by '+APP,M,Hh-22);pdf.text('Page '+i+' of '+n,W-M,Hh-22,{align:'right'})}
+  return pdf.output('blob');
+}
+function toXLSX(doc){
+  const wb=XLSX.utils.book_new();const used={};let lastH=doc.title;
+  for(const b of doc.blocks){if(b.t==='h')lastH=b.text.replace(/^\d+\.\s*/,'');if(b.t!=='table'&&b.t!=='kv')continue;
+    let name=(b.sheet||lastH).replace(/[\[\]:*?\/\\]/g,'').slice(0,28)||'Sheet';let nm=name,k=2;while(used[nm.toLowerCase()])nm=name.slice(0,26)+' '+k++;used[nm.toLowerCase()]=1;
+    const aoa=b.t==='kv'?b.rows:[b.head,...b.rows];const ws=XLSX.utils.aoa_to_sheet(aoa);
+    ws['!cols']=aoa[0].map((_,i)=>{let m=8;for(const r of aoa){const l=String(r[i]==null?'':r[i]).length;if(l>m)m=l}return {wch:Math.min(60,m+2)}});
+    XLSX.utils.book_append_sheet(wb,ws,nm)}
+  return new Blob([XLSX.write(wb,{bookType:'xlsx',type:'array'})]);
+}
+const LIBURL={jspdf:'https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js',autotable:'https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js',xlsx:'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js'};
+const LIBOK={jspdf:()=>window.jspdf&&window.jspdf.jsPDF,autotable:()=>window.jspdf&&window.jspdf.jsPDF&&window.jspdf.jsPDF.API.autoTable,xlsx:()=>window.XLSX&&window.XLSX.utils};
+function loadLib(k){if(LIBOK[k]())return Promise.resolve();return new Promise((res,rej)=>{const s=document.createElement('script');s.src=LIBURL[k];s.onload=()=>LIBOK[k]()?res():rej(new Error(k));s.onerror=()=>rej(new Error(k));document.head.appendChild(s)})}
+async function loadLibs(ks){for(const k of ks)await loadLib(k)}
+async function buildDoc(kind){
+  const loc=S.ui.role==='exec'?(S.ui.rpLoc||'all'):S.ui.loc;
+  const sites=loc==='all'?S.locations.map(l=>l.id):loc==='corp'?[]:[loc];
+  switch(kind){
+    case 'sra':return docSRA(sites,locLabel(loc==='corp'?'all':loc));
+    case 'cap':return docCAP(loc==='all'?ents().map(e=>e.id):[loc],locLabel(loc));
+    case 'ins':return docIns();
+    case 'osha':if(!sites.length){toast('Choose a location for the OSHA binder.');return null}return docOSHA(sites,locLabel(loc));
+    case 'daily':if(loc==='all'||loc==='corp'){toast('Choose a single location for the daily log.');return null}return docDaily(loc,S.ui.rpMonth||isoDay(new Date()).slice(0,7));
+    case 'exec':return docExec();
+    case 'activity':if(loc==='all'){toast('Choose a single location for the activity report.');return null}return await docActivity(loc);
+  }
+}
+let BUSY=false;
+async function runReport(kind,fmtx){
+  if(BUSY)return;BUSY=true;
+  try{
+    const doc=await buildDoc(kind);if(!doc)return;
+    const lc=S.ui.role==='exec'?(S.ui.rpLoc||'all'):S.ui.loc;const scope=(kind==='ins'||kind==='exec'||lc==='all')?'':'-'+slug(ent(lc).name);
+    const base=slug(S.org.name)+scope+'-'+doc.file+'-'+isoDay(new Date());
+    if(fmtx==='pdf'){toast('Building PDF…');let ok=true;try{await loadLibs(['jspdf','autotable'])}catch(e){ok=false}
+      if(ok){await saveFile(base+'.pdf',toPDF(doc))}else{toast('PDF needs a connection the first time. Saving as HTML you can print to PDF.');await saveFile(base+'.html',wrapDoc(doc.title,toHTML(doc)))}}
+    else if(fmtx==='xlsx'){let ok=true;try{await loadLibs(['xlsx'])}catch(e){ok=false}
+      if(ok)await saveFile(base+'.xlsx',toXLSX(doc));else{const t=doc.blocks.find(b=>b.t==='table');toast('Excel needs a connection the first time. Saving the main table as CSV.');if(t)await saveFile(base+'.csv',csv([t.head,...t.rows]))}}
+    else await saveFile(base+'.html',wrapDoc(doc.title,toHTML(doc)));
+  }catch(err){console.error(err);toast('That report couldn’t be built. Try HTML instead.')}
+  finally{BUSY=false}
+}
+function viewReports(){
+  const exec=S.ui.role==='exec';const loc=exec?(S.ui.rpLoc||'all'):S.ui.loc;
+  const months=[];for(let d=new Date(SCH.ys.getFullYear(),SCH.ys.getMonth(),1);d<=SCH.today;d=new Date(d.getFullYear(),d.getMonth()+1,1))months.push(isoDay(d).slice(0,7));
+  if(!S.ui.rpMonth||!months.includes(S.ui.rpMonth))S.ui.rpMonth=months[months.length-1];
+  const single=loc!=='all'&&loc!=='corp';const on=p=>S.org.progs.includes(p);
+  const card=(k,title,aud,desc,o={})=>{const dis=o.need==='site'?!single:o.need==='one'?loc==='all':false;
+    return `<div class="rcard"><div><h3>${title}</h3><p class="aud">${aud}</p><p class="muted" style="font-size:.92rem">${desc}</p>${dis?'<p class="hint" style="margin-top:8px">Choose a single location above.</p>':''}${o.extra||''}</div><div class="exports">${['pdf','xlsx','html'].map(f=>`<button class="btn small${f==='pdf'?' primary':''}" data-act="report" data-id="${k}" data-fmt="${f}" ${dis?'disabled':''}>${{pdf:'PDF',xlsx:'Excel',html:'HTML'}[f]}</button>`).join('')}${o.btn||''}</div></div>`};
+  const insEvs=INSQ.map(insEval);const insC=a=>insEvs.filter(x=>x.ans===a).length;
+  return `<h1>Reports</h1><p class="muted" style="max-width:64ch;margin-top:6px">Standard formats that auditors, carriers, and inspectors expect. PDF to send, Excel to work in, HTML to open anywhere.</p>
+  <div class="row2" style="max-width:640px;margin-top:18px">
+    ${exec?`<div class="field"><label for="rp-loc">Location</label><select id="rp-loc" data-change="rpLoc"><option value="all">All locations</option>${ents().map(e=>`<option value="${e.id}" ${e.id===loc?'selected':''}>${esc(e.name)}</option>`).join('')}</select></div>`:`<div class="field"><label>Location</label><p style="min-height:48px;display:flex;align-items:center;font-weight:700">${esc(ent(loc).name)}</p></div>`}
+    ${on('ops')?`<div class="field"><label for="rp-month">Month for daily log</label><select id="rp-month" data-change="rpMonth">${months.map(m=>`<option value="${m}" ${m===S.ui.rpMonth?'selected':''}>${parseDay(m+'-01').toLocaleDateString(undefined,{month:'long',year:'numeric'})}</option>`).join('')}</select></div>`:''}
+  </div>
+  <div class="section" style="margin-top:20px"><h2>Compliance and risk</h2><div class="rgrid">
+    ${on('hipaa')||on('phys')?card('sra','HIPAA Security Risk Assessment (SRA)','For OCR, auditors, attorneys, and your annual sign-off','Every Security Rule standard and implementation specification, marked Required or Addressable, with status, last verified date, findings, and the checks that prove it. Includes the NIST SP 800-30 risk register, privacy and breach items, incidents, and approval page.'):''}
+    ${card('cap','Corrective action plan','For auditors, surveyors, and leadership follow-up','Every finding with risk level, corrective action, owner, target date, and status, in the layout surveyors call a CAP or POA&M.')}
+    ${exec&&on('hipaa')?card('ins','Cyber insurance controls summary','For your broker and carrier at renewal','The controls carriers ask about, including MFA, EDR, 24/7 monitoring, offline backups, restore tests, RDP, and training, answered from your completed checks with dates.',{extra:`<p class="hint" style="margin-top:8px">Currently ${insC('Yes')} yes, ${insC('Partial')} partial, ${insC('No')} no, ${insC('Not verified')} not verified.</p>`,btn:'<button class="btn small" data-act="ins-review">Review answers</button>'}):''}
+  </div></div>
+  <div class="section"><h2>Safety and operations</h2><div class="rgrid">
+    ${on('osha')?card('osha','OSHA safety binder','For OSHA inspectors and safety audits','Program status for each standard, dated inspection logs for eyewash, sharps, extinguishers, exits, first aid, and regulated waste, and the workplace injury list for Forms 300 and 301.'):''}
+    ${on('ops')?card('daily','Daily operations and temperature log','For VFC and state inspections and site visits','Opening and closing times and initials for each business day, refrigerator readings with out-of-range excursions flagged, and exceptions for the month.',{need:'site'}):''}
+  </div></div>
+  <div class="section"><h2>Leadership and evidence</h2><div class="rgrid">
+    ${exec?card('exec','Executive scorecard','For owners, the board, and regional directors','Readiness by location and program, escalations, leadership follow-ups, and attestation.'):''}
+    ${card('activity','Activity and evidence report','For evidence requests and site visits','Every check with date, person, result, and notes, plus a time-stamped photo appendix.',{need:'one'})}
+  </div></div>
+  <p class="muted" style="font-size:.85rem;margin-top:24px;max-width:70ch">PDF and Excel load a small library the first time you use them, so they need a connection once. HTML works offline and prints to PDF from any browser.</p>`;
+}
+function openIns(){
+  const sec={};INSQ.forEach(q=>{(sec[q[1]]=sec[q[1]]||[]).push(q)});
+  $('#sheet-body').innerHTML=`<div class="sheet-head"><div><h2>Cyber insurance answers</h2><p class="muted" style="font-size:.9rem;margin-top:4px">Answers come from your checks. Override any answer and add a note for the carrier.</p></div><button class="icon-btn" data-act="close" aria-label="Close">${ICON.close}</button></div>
+  <div class="sheet-body">${Object.keys(sec).map(s=>`<h3 style="margin:14px 0 4px">${esc(s)}</h3>`+sec[s].map(q=>{const v=insEval(q);return `<div class="qi"><div class="q">${esc(q[2])}</div><div class="sub"><span>${esc(v.basis)}</span></div>
+    <div class="row2"><select data-ins="${q[0]}" aria-label="Answer"><option value="">From checks: ${v.auto}</option>${['Yes','Partial','No','Not applicable'].map(a=>`<option ${S.ins[q[0]]&&S.ins[q[0]].ans===a?'selected':''}>${a}</option>`).join('')}</select><input type="text" data-insn="${q[0]}" value="${esc(v.note)}" placeholder="Note for the carrier" aria-label="Note"></div></div>`}).join('')).join('')}</div>
+  <div class="sheet-foot"><button class="btn" data-act="close">Cancel</button><button class="btn primary" data-act="save-ins">Save answers</button></div>`;
+  openSheet();
+}
+function saveIns(){document.querySelectorAll('[data-ins]').forEach(sel=>{const id=sel.dataset.ins;const note=document.querySelector('[data-insn="'+id+'"]').value.trim();if(sel.value||note)S.ins[id]={ans:sel.value||undefined,note};else delete S.ins[id]});save();closeSheet();render();toast('Answers saved.')}
+
+/* ===================== Sheet helpers ===================== */
+function openSheet(){const d=$('#sheet');if(!d.open)d.showModal();const b=d.querySelector('.sheet-body');if(b)b.scrollTop=0}
+function closeSheet(){const d=$('#sheet');if(d.open)d.close();DRAFT=null}
+$('#sheet').addEventListener('click',e=>{if(e.target.id==='sheet')closeSheet()});
+$('#sheet').addEventListener('input',e=>{if(e.target.dataset.num==null||!DRAFT)return;const i=+e.target.dataset.num;const it=OMAP[DRAFT.id].task.items[i];const v=parseFloat(e.target.value);if(isNaN(v)){DRAFT.vals[i]=null;DRAFT.ans[i]=null}else{DRAFT.vals[i]=v;DRAFT.ans[i]=v>=it.num.min&&v<=it.num.max?'y':'n'}const na=e.target.closest('.qi').querySelector('[data-v="na"]');if(na)na.setAttribute('aria-pressed','false');refreshDraftUI()});
+$('#sheet').addEventListener('change',e=>{if(e.target.dataset.step!=null&&DRAFT){DRAFT.steps[+e.target.dataset.step]=e.target.checked}});
+
+/* ===================== Demo ===================== */
+async function makeDemo(){
+  const today=sod(new Date());
+  const L=[['Riverside','North','Alicia Gomez',.97],['Lakewood','North','Ben Carter',.93],['Harbor Point','North','Dana Whitfield',.6],['Oak Ridge','Central','Evan Patel',.95],['Cedar Park','Central','Farah Haddad',.9],['Westgate','Central','Greg Olson',.84],['Mill Creek','Central','Hannah Lee',.96],['Pine Hollow','South','Isaac Moreno',.55],['Bay Street','South','Jasmine Wright',.92],['Summit','South','Kevin Nguyen',.88],['Fairview','South','Laura Kim',.94],['Kingsley','South','Marcus Bell',.78]];
+  const locs=L.map(([name,region,manager])=>({id:'l'+slug(name).replace(/-/g,''),name,region,manager}));
+  S=blank({name:'Bayside Specialty Care',exec:'Rachel Morgan',it:'Bayside IT',start:isoDay(addDays(today,-158)),progs:Object.keys(PROGS)},locs);
+  await idb.clear();buildSchedule();
+  let seed=13;const rnd=()=>{seed=(seed*9301+49297)%233280;return seed/233280};
+  const dil={corp:.9};L.forEach((x,i)=>{dil[locs[i].id]=x[3]});
+  const forced={'corp:baa':['fail','No BAA on file for the after-hours answering service.'],'corp:mfa':['partial','MFA not enforced on two shared mailboxes.']};
+  const seen={};
+  for(const e of ents()){const d=dil[e.id];
+    for(const o of OCCE[e.id]){if(o.due>=today&&!(o.task.freq==='daily'&&+o.due===+today&&rnd()<.5))continue;
+      const fk=e.id+':'+o.task.id;const f=forced[fk]&&!seen[fk];const age=(today-o.due)/DAY;
+      if(!f&&rnd()>(age<7?d*.88:d))continue;
+      const t=o.task;let at=o.task.freq==='daily'?new Date(+o.due+((t.id==='open'?7.5:17.5)+rnd())*36e5):addDays(o.due,Math.floor(rnd()*5)-3);if(at>new Date())at=new Date();
+      const rec={by:assignee(e.id,t),at:at.toISOString()};
+      if(t.kind==='round'){rec.ans=t.items.map(()=>rnd()<(1-d)*.22?'n':'y');t.items.forEach((it,i)=>{if(it.num){rec.vals=rec.vals||t.items.map(()=>null);rec.vals[i]=rec.ans[i]==='n'?(rnd()<.6?47+Math.round(rnd()*3):34+Math.round(rnd())):37+Math.round(rnd()*70)/10}});const m=rec.ans.length,fn=rec.ans.filter(a=>a==='n').length;rec.result=fn===0?'pass':fn/m>=.5?'fail':'partial';if(fn)rec.note='Corrected on the spot where possible.'}
+      else{let r;if(f){seen[fk]=1;[r,rec.note]=forced[fk]}else{const x=rnd();const q=.6+.35*d;r=x<q?'pass':x<q+.2*(1-q)+.08?'partial':x<.985?'fail':'na';if(r==='partial')rec.note='Mostly in place; one item needs follow-up.';if(r==='fail')rec.note='Not in place at time of check.'}rec.result=r;rec.steps=t.steps.map(()=>r!=='fail')}
+      S.done[o.id]=rec;
+      if(!t.noRisk){const mk=[];if(t.kind==='round')rec.ans.forEach((a,i)=>{if(a==='n')mk.push(riskFromItem(o,i,rec.note,at))});else if(rec.result==='fail'||rec.result==='partial')mk.push(riskFrom(o,rec.result,rec.note,at));
+        mk.forEach(rk=>{if(!f&&rnd()<.35+.5*d){rk.status='mitigated';rk.closed=addDays(at,Math.floor(rnd()*14)+2).toISOString();rk.plan='Corrected and re-checked.'}else if(parseDay(rk.due)<today&&rnd()<.6)rk.due=isoDay(addDays(today,5+Math.floor(rnd()*25)));
+          if(fk==='corp:baa'){rk.plan='Requested BAA from answering service; following up weekly.';rk.status='progress'}if(fk==='corp:mfa')rk.plan='Bayside IT converting shared mailboxes and enforcing MFA.';S.risks.push(rk)})}
+    }}
+  S.incidents.push({id:uid(),eid:locs[2].id,kind:'privacy',title:'Lab results faxed to wrong number',discovered:isoDay(addDays(today,-19)),count:'1',description:'Results for one patient sent to a transposed fax number. Recipient pharmacy confirmed destruction.',phi:'yes',status:'notified',actions:'Destruction attestation received. Patient notified by letter. Logged for annual HHS report.',created:new Date().toISOString()});
+  S.incidents.push({id:uid(),eid:locs[7].id,kind:'injury',title:'Needlestick during injection',discovered:isoDay(addDays(today,-6)),count:'1',description:'MA sustained needlestick while recapping. Followed post-exposure protocol.',phi:'no',status:'investigating',actions:'Post-exposure evaluation completed. Added to sharps injury log. Reviewing safety-engineered syringes.',created:new Date().toISOString()});
+  S.ui.role='exec';S.ui.tab='dash';S.ui.loc=locs[0].id;save();render();window.scrollTo(0,0);toast('Demo network loaded. Switch to Site to see a manager’s view.');
+}
+
+/* ===================== Actions ===================== */
+const ACT={
+  tab:id=>{S.ui.tab=id;S.ui.drill=null;save();render();window.scrollTo(0,0)},
+  role:id=>{S.ui.role=id;S.ui.tab=id==='exec'?'dash':'tasks';S.ui.drill=null;save();render();window.scrollTo(0,0)},
+  seg:id=>{S.ui.seg=id;save();render()},rseg:id=>{S.ui.rseg=id;save();render()},
+  drill:id=>{S.ui.drill=id;save();render();window.scrollTo(0,0)},undrill:()=>{S.ui.drill=null;save();render();window.scrollTo(0,0)},
+  'open-task':id=>openTask(id),close:()=>closeSheet(),
+  result:(id,el)=>{DRAFT.result=el.dataset.r;el.parentElement.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b===el)));refreshDraftUI()},
+  ans:(id,el)=>{const i=+el.dataset.i;DRAFT.ans[i]=el.dataset.v;if(el.dataset.v==='na'){const inp=el.closest('.qi').querySelector('[data-num]');if(inp){inp.value='';DRAFT.vals[i]=null}}el.parentElement.querySelectorAll('[data-v]').forEach(b=>b.setAttribute('aria-pressed',String(b===el)));refreshDraftUI()},
+  'all-yes':()=>{const its=OMAP[DRAFT.id].task.items;DRAFT.ans=DRAFT.ans.map((a,i)=>its[i].num?a:'y');document.querySelectorAll('#items .yn:not(.num) [data-v]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.v==='y')));refreshDraftUI()},
+  'add-photo':()=>{PHOTO_FOR=null;$('#photo-input').click()},
+  'item-photo':(id,el)=>{PHOTO_FOR=+el.dataset.i;$('#photo-input').click()},
+  'del-photo':async(id,el)=>{const i=el.dataset.i;if(i==='')DRAFT.ev=DRAFT.ev.filter(x=>x!==id);else DRAFT.iev[i]=(DRAFT.iev[i]||[]).filter(x=>x!==id);await idb.del(id);refreshDraftUI()},
+  'save-task':()=>saveTask(),
+  'undo-task':()=>{if(!confirm('Clear this result? Risks it created stay in the plan.'))return;delete S.done[DRAFT.id];save();closeSheet();render();toast('Result cleared.')},
+  'open-risk':id=>openRisk(id),'new-risk':()=>openRisk(null),'save-risk':id=>saveRisk(id),
+  'del-risk':id=>{if(!confirm('Delete this risk?'))return;S.risks=S.risks.filter(r=>r.id!==id);save();closeSheet();render();toast('Risk deleted.')},
+  'open-incident':id=>openIncident(id),'new-incident':()=>openIncident(null),'save-incident':id=>saveIncident(id),
+  'del-incident':id=>{if(!confirm('Delete this incident record?'))return;S.incidents=S.incidents.filter(x=>x.id!==id);save();closeSheet();render();toast('Incident deleted.')},
+  'ack-all':eid=>{escalations([eid]).forEach(x=>{S.acks[x.key]={at:new Date().toISOString(),by:S.org.exec,upTo:isoDay(x.last.due)}});save();render();toast('Follow-up recorded. Alerts return if the next cycle is missed.')},
+  ack:(id,el)=>{S.acks[id]={at:new Date().toISOString(),by:S.org.exec,upTo:el.dataset.due};save();render();toast('Follow-up recorded. The alert returns if the next one is missed.')},
+  signoff:()=>{const n=$('#so-name').value.trim();if(!n){toast('Enter your name to sign off.');return}if(!$('#so-ok').checked){toast('Confirm you reviewed the risk analysis.');return}S.signoffs.push({name:n,at:new Date().toISOString(),score:avg(ents().map(e=>entScore(e.id).score))});save();render();toast('Sign-off recorded.')},
+  report:(id,el)=>runReport(id,el.dataset.fmt),
+  'ins-review':()=>openIns(),'save-ins':()=>saveIns(),
+  'open-reports':id=>{S.ui.rpLoc=id;S.ui.tab='reports';S.ui.drill=null;save();render();window.scrollTo(0,0)},
+  backup:async()=>{const ev=await idb.all();saveFile(slug(S.org.name)+'-audittrack-backup-'+isoDay(new Date())+'.json',JSON.stringify({app:'audittrack',v:2,state:S,evidence:ev}))},
+  restore:()=>$('#restore-input').click(),
+  'add-loc':()=>{readSettings();S.locations.push({id:'l'+uid(),name:'New location',region:'',manager:S.org.exec});save();render();const rows=document.querySelectorAll('.locrow');const last=rows[rows.length-1];if(last){last.querySelector('input').focus();last.querySelector('input').select()}},
+  'del-loc':id=>{const l=S.locations.find(x=>x.id===id);if(!l)return;if(S.locations.length<=1){toast('Keep at least one location.');return}if(!confirm('Remove '+l.name+' and all of its records?'))return;
+    readSettings();S.locations=S.locations.filter(x=>x.id!==id);Object.keys(S.done).forEach(k=>{if(k.startsWith(id+':'))delete S.done[k]});S.risks=S.risks.filter(r=>r.eid!==id);S.incidents=S.incidents.filter(x=>x.eid!==id);save();render();toast('Location removed.')},
+  'save-settings':()=>{if(readSettings()){save();render();toast('Settings saved.')}},
+  reset:async()=>{if(!confirm('Erase all data on this device? Download a backup first if you need it.'))return;S=null;try{localStorage.removeItem(KEY)}catch(e){}await idb.clear();render()},
+  demo:()=>{if(S&&!confirm('Replace current data with the demo network?'))return;makeDemo()},
+  start:()=>{const g=id=>$(id).value.trim();const name=g('#ob-org');if(!name){toast('Enter your organization name to start.');$('#ob-org').focus();return}
+    const loc={id:'l'+uid(),name:g('#ob-loc')||'Main location',region:'',manager:g('#ob-mgr')||'Site manager'};
+    S=blank({name,exec:g('#ob-exec')||'Executive',it:g('#ob-it'),start:$('#ob-start').value||isoDay(new Date()),progs:Object.keys(PROGS)},[loc]);save();render();toast('Your first round is ready.')}
+};
+function readSettings(){
+  const name=$('#s-org')?$('#s-org').value.trim():S.org.name;if(!name){toast('Organization name can’t be empty.');return false}
+  const progs=[...document.querySelectorAll('[data-prog]')].filter(x=>x.checked).map(x=>x.dataset.prog);
+  if($('#s-org')&&!progs.length){toast('Keep at least one program on.');return false}
+  if($('#s-org'))Object.assign(S.org,{name,exec:$('#s-exec').value.trim()||S.org.exec,it:$('#s-it').value.trim(),start:$('#s-start').value||S.org.start,progs});
+  document.querySelectorAll('.locrow').forEach(row=>{const l=S.locations.find(x=>x.id===row.dataset.loc);if(!l)return;const v=f=>row.querySelector('[data-f="'+f+'"]').value.trim();l.name=v('name')||l.name;l.region=v('region');l.manager=v('manager')||l.manager});
+  return true;
+}
+document.addEventListener('click',e=>{const el=e.target.closest('[data-act]');if(!el)return;const fn=ACT[el.dataset.act];if(fn){e.preventDefault();fn(el.dataset.id,el,e)}});
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.matches('tr[data-act]'))ACT.drill(e.target.dataset.id)});
+document.addEventListener('change',e=>{const k=e.target.dataset.change;if(!k)return;if(k==='loc')S.ui.loc=e.target.value;if(k==='region')S.ui.region=e.target.value;if(k==='rloc')S.ui.rloc=e.target.value;if(k==='rpLoc')S.ui.rpLoc=e.target.value;if(k==='rpMonth')S.ui.rpMonth=e.target.value;save();render()});
+$('#restore-input').addEventListener('change',async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;
+  try{const j=JSON.parse(await f.text());if(j.app!=='audittrack'||!j.state||!j.state.org)throw new Error('bad');if(S&&!confirm('Replace current data with this backup?'))return;
+    S=j.state;await idb.clear();for(const r of j.evidence||[])await idb.put(r);save();render();toast('Backup restored.')}catch(err){toast('That file isn’t an AuditTrack Pro backup.')}});
+S=loadState();
+if(S){S.ui=Object.assign({role:'manager',tab:'tasks',seg:'week',rseg:'risks',region:'all',rloc:'all',drill:null},S.ui||{});S.acks=S.acks||{};S.ins=S.ins||{};S.signoffs=S.signoffs||[]}
+render();
+</script>
+</body>
+</html>
